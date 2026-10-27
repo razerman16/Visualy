@@ -1,3 +1,4 @@
+import { registerVideoImports } from './video-imports.js';
 import { registerPdfImports } from './pdf-imports.js';
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
 import cookie from '@fastify/cookie';
@@ -192,6 +193,7 @@ api.get(`${base}/events`,async(req)=>{user(req);return (await pool.query('SELECT
 await mkdir(mediaDir,{recursive:true});
 await migrate();
 await registerPdfImports(api,mediaDir,(req,write)=>{user(req,write?EDIT:READ);});
+await registerVideoImports(api,mediaDir,(req,write)=>{user(req,write?EDIT:READ);});
 const cleanup=setInterval(()=>{void pool.query("DELETE FROM sessions WHERE expires_at<now(); DELETE FROM pair_requests WHERE expires_at<now()-interval '1 day'; DELETE FROM events WHERE created_at<now()-interval '30 days'").catch(err=>api.log.error(err));},3600000);cleanup.unref();
 api.addHook('onClose',async()=>{clearInterval(cleanup);});
 for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{void api.close().then(()=>pool.end()).then(()=>process.exit(0));});

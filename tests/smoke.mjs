@@ -5,6 +5,10 @@
  */
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import {mkdtemp,readFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {execFileSync} from 'node:child_process';
 
 const base = (process.env.SCENZLY_TEST_URL || 'http://127.0.0.1:8080') + '/api/v1';
 const email = process.env.SCENZLY_TEST_EMAIL || `test-${randomUUID()}@example.test`;
@@ -44,6 +48,25 @@ let pdfJob;
 for(let i=0;i<30;i++){pdfJob=(await req('/imports/pdf')).find(j=>j.id===imported.id);if(pdfJob.status!=='pending')break;await new Promise(r=>setTimeout(r,1000));}
 assert.equal(pdfJob.status,'done',pdfJob.error);assert.equal(pdfJob.mediaIds.length,1);
 const pageMedia=(await req('/media')).find(m=>m.id===pdfJob.mediaIds[0]);assert.equal(pageMedia.mime,'image/png');
+
+const videoDir=await mkdtemp(join(tmpdir(),'screnzly-video-smoke-'));
+try{
+ const source=join(videoDir,'source.avi');
+ execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=160x120:r=10','-f','lavfi','-i','sine=frequency=440:sample_rate=44100','-t','1','-c:v','mpeg4','-c:a','pcm_s16le',source]);
+ await req('/imports/video',{auth:null,status:401});
+ const invalidForm=new FormData();invalidForm.append('file',new Blob(['invalid video']),'bad.avi');
+ await req('/imports/video',{method:'POST',body:invalidForm,status:415});
+ const videoForm=new FormData();videoForm.append('file',new Blob([await readFile(source)]),'source.avi');
+ const submitted=await req('/imports/video',{method:'POST',body:videoForm,status:202});let job;
+ for(let i=0;i<30;i++){job=(await req('/imports/video')).find(j=>j.id===submitted.id);if(job.status!=='pending')break;await new Promise(r=>setTimeout(r,1000));}
+ assert.equal(job.status,'done',job.error);assert.ok(job.duration>0);
+ const generated=(await req('/media')).find(m=>m.id===job.mediaId);assert.equal(generated.mime,'video/mp4');
+ const mp4=await req(`/media/${job.mediaId}/file`,{raw:true});assert.ok(mp4.byteLength>0);
+ if(process.env.SCENZLY_CHROMIUM){
+  const {chromium}=await import('@playwright/test');const browser=await chromium.launch({executablePath:process.env.SCENZLY_CHROMIUM,args:['--no-sandbox']});
+  try{const page=await browser.newPage({extraHTTPHeaders:{Cookie:cookie}});await page.goto(base+'/health');await page.setContent(`<video muted loop src="${base}/media/${job.mediaId}/file"></video>`);await page.locator('video').evaluate(v=>v.play());await page.waitForFunction(()=>document.querySelector('video').currentTime>0.1);console.log('PASS: converted H.264 video decoded and played in Chromium.');}finally{await browser.close();}
+ }
+}finally{await rm(videoDir,{recursive:true,force:true});}
 
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64');
 const upload = new FormData();upload.append('file',new Blob([png],{type:'image/png'}),'recette.png');

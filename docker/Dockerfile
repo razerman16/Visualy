@@ -22,12 +22,11 @@ RUN apt-get update \
     && mkdir -p /data/media \
     && chown node:node /data/media
 WORKDIR /app
-COPY --from=production-dependencies /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/apps/api/package.json ./apps/api/package.json
-COPY --from=build /app/apps/api/dist ./apps/api/dist
-COPY --from=build /app/packages/shared ./packages/shared
-RUN chmod -R a+rX /app
+COPY --chown=node:node --from=production-dependencies /app/node_modules ./node_modules
+COPY --chown=node:node --from=build /app/package.json ./package.json
+COPY --chown=node:node --from=build /app/apps/api/package.json ./apps/api/package.json
+COPY --chown=node:node --from=build /app/apps/api/dist ./apps/api/dist
+COPY --chown=node:node --from=build /app/packages/shared ./packages/shared
 USER node
 EXPOSE 3000
 CMD ["node", "apps/api/dist/index.js"]

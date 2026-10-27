@@ -23,3 +23,6 @@ Module partagé `@scenzly/shared` exporte types et `selectProgram(schedules:Sche
 
 ## Imports PDF
 `POST /imports/pdf` multipart `file` (éditeur/admin) retourne HTTP 202 `{id,name,status:"pending"}`. `GET /imports/pdf` (utilisateur authentifié) retourne les 100 derniers imports `{id,name,status,error,mediaIds,createdAt}`. États : pending/done/error. Les pages converties apparaissent dans `/media`. Limites : 25 Mo, 50 pages, sortie 1920 pixels maximum ; PDF protégés ou invalides rejetés par le traitement.
+
+## Imports vidéo
+`POST /imports/video` multipart `file` (éditeur/admin) retourne HTTP 202 `{id,name,status:"pending"}`. `GET /imports/video` (utilisateur authentifié) liste `{id,name,status,error,mediaId,duration,createdAt}`. États pending/done/error ; pending recouvre l’attente et le traitement. Une conversion terminée crée un nouveau média MP4 accessible par `/media/:mediaId/file`. Les mêmes restrictions d’accès et règles de publication que les autres médias s’appliquent. Fichiers inconnus : HTTP 415 ; dépassement de 500 Mo : HTTP 413.

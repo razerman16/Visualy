@@ -73,7 +73,7 @@ Les détails du contrat sont dans [docs/api-contract.md](docs/api-contract.md). 
 
 ## Périmètre de cette première version
 
-Cette base couvre le parcours local de création, publication, jumelage et diffusion. Elle n’implémente pas encore la totalité du cahier des charges : transcodage vidéo asynchrone, import PowerPoint, éditeur avancé avec groupes/annuler-rétablir, historique de restauration des versions, récupération de compte par email, quotas par organisation et intégrations matérielles restent à développer. Les outils FFmpeg et Poppler sont présents dans l’image API pour les futurs traitements, sans promettre de conversion automatique.
+Cette base couvre le parcours local de création, publication, jumelage et diffusion. Elle n’implémente pas encore la totalité du cahier des charges : import PowerPoint, éditeur avancé avec groupes/annuler-rétablir, historique de restauration des versions, récupération de compte par email, quotas par organisation et intégrations matérielles restent à développer. FFmpeg et Poppler assurent les conversions vidéo et PDF dans l’image API.
 
 Les vidéos sont lues sans son par défaut pour respecter les règles d’autoplay des navigateurs. Le démarrage automatique en mode kiosque, l’heure NTP, l’allumage de la dalle et sa mise en veille se configurent sur l’appareil. Les événements de lecture décrivent le rendu du navigateur ; ils ne prouvent pas l’affichage physique de la dalle. La recette matérielle, les performances 4K et l’autonomie hors connexion doivent être vérifiées sur vos écrans cibles.
 
@@ -89,4 +89,12 @@ sh scripts/migrate-postgres18.sh
 
 Le script construit les images, sauvegarde la base et les médias, arrête les écritures, démarre PostgreSQL 18 dans un nouveau volume et restaure les données. Il refuse une cible non vide. Le volume PostgreSQL 17 et la sauvegarde restent conservés. En cas d’échec de restauration, l’API reste arrêtée ; conservez les volumes et utilisez la sauvegarde pour diagnostiquer. Ne supprimez aucun ancien volume avant validation.
 
-Dans **Médiathèque → Documents PDF**, importez un document (25 Mo, 50 pages maximum). Le traitement en arrière-plan crée une image PNG par page, disponible pour les scènes et programmes. La file est persistée dans PostgreSQL et reprise au redémarrage. L’interface affiche les imports en attente, terminés ou en erreur. Le traitement est exécuté par l’API, à concurrence limitée à un document par instance ; la conversion vidéo reste à implémenter.
+Dans **Médiathèque → Documents PDF**, importez un document (25 Mo, 50 pages maximum). Le traitement en arrière-plan crée une image PNG par page, disponible pour les scènes et programmes. La file est persistée dans PostgreSQL et reprise au redémarrage. L’interface affiche les imports en attente, terminés ou en erreur. Le traitement est exécuté par l’API, à concurrence limitée à un document par instance ; la conversion vidéo dispose de sa propre file persistante.
+
+## Conversion vidéo
+
+Dans **Médiathèque → Conversion vidéo**, importez un MP4/MOV, MKV/WebM ou AVI. La conversion en arrière-plan crée un nouveau média MP4 H.264, pixels YUV420p, audio AAC stéréo si la source contient du son et index `faststart` pour la lecture web. Une source sans piste audio est acceptée. Le fichier initial n’est pas publié ; seul le résultat complet rejoint la médiathèque.
+
+Limites : 500 Mo, 1 heure, dimensions source 8192 pixels maximum ; sortie limitée à 1920 × 1080 en conservant le ratio. Une conversion utilise deux threads et expire après 15 minutes. Un travail par instance API est traité à la fois, indépendamment des imports PDF. La file reprend les travaux interrompus après redémarrage ; les erreurs sont visibles dans l’interface. Les fichiers sources temporaires sont supprimés après succès ou échec définitif. L’import direct des médias existant reste disponible sans conversion.
+
+Les tests de conversion nécessitent FFmpeg/ffprobe et Poppler sur la machine qui lance `npm test`. Pour vérifier aussi la lecture Chromium sur une instance de recette vide : `SCENZLY_CHROMIUM=/usr/bin/chromium npm run test:smoke`.
