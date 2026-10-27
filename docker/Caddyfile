@@ -1,0 +1,15 @@
+{
+    # Local CA: no public ACME provider, no cloud service.
+    local_certs
+    admin off
+}
+
+{$ADMIN_DOMAIN} {
+    tls internal
+    reverse_proxy admin-web:80
+}
+
+{$PLAYER_DOMAIN} {
+    tls internal
+    reverse_proxy player-web:80
+}

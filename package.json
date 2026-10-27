@@ -1,0 +1,25 @@
+{
+  "name": "scenzly",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @scenzly/shared && npm run build -w @scenzly/api && npm run build -w @scenzly/admin && npm run build -w @scenzly/player",
+    "test": "npm run test --workspaces --if-present",
+    "dev:api": "npm run dev -w @scenzly/api",
+    "dev:admin": "npm run dev -w @scenzly/admin",
+    "dev:player": "npm run dev -w @scenzly/player",
+    "test:smoke": "node tests/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^22.18.0",
+    "typescript": "~5.9.3"
+  }
+}

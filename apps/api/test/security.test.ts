@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {hashPassword,verifyPassword,sniffMime,parseRange} from '../src/security.js';
+test('salted password hashes verify the password and reject wrong passwords',async()=>{const a=await hashPassword('long password 123!');const b=await hashPassword('long password 123!');assert.notEqual(a,b);assert.equal(await verifyPassword('long password 123!',a),true);assert.equal(await verifyPassword('incorrect',a),false);});
+test('media signature rejects HTML masquerading as an image',()=>{assert.equal(sniffMime(Buffer.from('<html>attack</html>')),undefined);assert.equal(sniffMime(Buffer.from([137,80,78,71,13,10,26,10])),'image/png');assert.equal(sniffMime(Buffer.from('0000ftypmp42')),'video/mp4');});
+test('video ranges support open ends and suffixes and reject invalid input',()=>{assert.deepEqual(parseRange('bytes=0-9',100),{start:0,end:9});assert.deepEqual(parseRange('bytes=90-',100),{start:90,end:99});assert.deepEqual(parseRange('bytes=-20',100),{start:80,end:99});assert.deepEqual(parseRange('bytes=0-200',100),{start:0,end:99});for(const invalid of ['bytes=100-','bytes=5-2','bytes=-0','bytes=0-1,4-5','bytes=-','text=0-1'])assert.equal(parseRange(invalid,100),null,invalid);});

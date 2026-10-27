@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/*.log
+**/coverage
+data
+backups
+test-results
+attachments

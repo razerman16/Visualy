@@ -1,0 +1,27 @@
+{
+  "name": "@scenzly/player",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 8081",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 8081",
+    "test": "tsx --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@scenzly/shared": "*",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "qrcode": "^1.5.4",
+    "@noble/hashes": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@types/qrcode": "^1.5.5",
+    "vite": "^7.1.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "tsx": "^4.20.5"
+  }
+}
