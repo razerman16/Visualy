@@ -5,7 +5,7 @@ import {type Media,type Scene,type SceneElement,uid} from './api';
 
 function QR({text}:{text:string}) {
   const [src,setSrc]=useState('');
-  useEffect(()=>{let active=true;QRCode.toDataURL(text||'Scenzly',{margin:1,width:512}).then(v=>{if(active)setSrc(v)}).catch(()=>{if(active)setSrc('')});return()=>{active=false}},[text]);
+  useEffect(()=>{let active=true;QRCode.toDataURL(text||'Screnzly',{margin:1,width:512}).then(v=>{if(active)setSrc(v)}).catch(()=>{if(active)setSrc('')});return()=>{active=false}},[text]);
   return src?<img src={src} alt="QR code" draggable={false}/>:<span>QR</span>;
 }
 export function SceneContent({scene,media,scale=1,onSelect,selectedId,onDrag}:{scene:Scene;media:Media[];scale?:number;onSelect?:(id:string)=>void;selectedId?:string;onDrag?:(event:PointerEvent<HTMLElement>,element:SceneElement,resize:boolean)=>void}) {

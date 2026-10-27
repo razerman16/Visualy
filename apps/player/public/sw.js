@@ -19,7 +19,7 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).catch(async () => {
       const cached = await caches.match('/', { cacheName: SHELL_CACHE });
-      return cached || new Response('Scenzly : premier démarrage hors ligne impossible.', { status: 503 });
+      return cached || new Response('Screnzly : premier démarrage hors ligne impossible.', { status: 503 });
     }));
   } else if (url.pathname.startsWith('/assets/') || ['/icon.svg', '/manifest.webmanifest'].includes(url.pathname)) {
     event.respondWith(caches.match(event.request, { cacheName: SHELL_CACHE }).then(cached => cached || fetch(event.request)));

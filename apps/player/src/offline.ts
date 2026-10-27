@@ -43,7 +43,7 @@ export async function prepareManifest(manifest: Manifest, token: string, signal?
       const url = mediaUrl(media, token);
       let response = cache ? await caches.match(url) : undefined;
       let bytes: ArrayBuffer;
-      if (response?.headers.get('X-Scenzly-Checksum') === media.checksum.toLowerCase()) {
+      if (response?.headers.get('X-Screnzly-Checksum') === media.checksum.toLowerCase()) {
         bytes = await response.arrayBuffer();
         verifyAsset(bytes, media.checksum);
       } else {
@@ -52,7 +52,7 @@ export async function prepareManifest(manifest: Manifest, token: string, signal?
         bytes = await response.arrayBuffer();
         verifyAsset(bytes, media.checksum);
       }
-      if (cache) await cache.put(url, new Response(bytes, { headers: { 'Content-Type': media.mime, 'Content-Length': String(bytes.byteLength), 'X-Scenzly-Checksum': media.checksum.toLowerCase() } }));
+      if (cache) await cache.put(url, new Response(bytes, { headers: { 'Content-Type': media.mime, 'Content-Length': String(bytes.byteLength), 'X-Screnzly-Checksum': media.checksum.toLowerCase() } }));
       const blobUrl = URL.createObjectURL(new Blob([bytes], { type: media.mime }));
       objectUrls.push(blobUrl); urls[media.id] = blobUrl;
     }

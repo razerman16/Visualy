@@ -5,7 +5,7 @@ import { playlistPosition } from './playback';
 
 function Qr({ text }: { text: string }) {
   const [src, setSrc] = useState('');
-  useEffect(() => { let live = true; QRCode.toDataURL(text || 'Scenzly', { margin: 1, width: 512, errorCorrectionLevel: 'M' }).then(value => { if (live) setSrc(value); }).catch(() => { if (live) setSrc(''); }); return () => { live = false; }; }, [text]);
+  useEffect(() => { let live = true; QRCode.toDataURL(text || 'Screnzly', { margin: 1, width: 512, errorCorrectionLevel: 'M' }).then(value => { if (live) setSrc(value); }).catch(() => { if (live) setSrc(''); }); return () => { live = false; }; }, [text]);
   return src ? <img src={src} className="element-asset" alt="QR code" /> : null;
 }
 function Element({ element: e, urls, now, onError }: { element: SceneElement; urls: Record<string, string>; now: Date; onError: (error: string) => void }) {
@@ -45,5 +45,5 @@ export function Playback({ program, urls, now, onItem, onError }: { program: Pub
 }
 export function Mark() { return <div className="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M11 9h18v8H19v4h10v10H11v-8h10v-4H11z" fill="currentColor" /></svg></div>; }
 export function Fallback({ title = 'Votre écran est prêt', message = 'Affectez un programme de secours ou une programmation depuis l’administration.' }: { title?: string; message?: string }) {
-  return <div className="fallback"><Mark /><h1>{title}</h1><p>{message}</p><span className="fallback-signature">Scenzly · Affichage dynamique</span></div>;
+  return <div className="fallback"><Mark /><h1>{title}</h1><p>{message}</p><span className="fallback-signature">Screnzly · Affichage dynamique</span></div>;
 }

@@ -114,7 +114,7 @@ Ajoutez les deux arguments `-f` aux commandes Compose si vous utilisez HTTPS. Ne
 
 ## Réseau isolé
 
-Sur une machine de préparation connectée, construisez les trois images Scenzly et récupérez l’image PostgreSQL (ainsi que Caddy pour HTTPS). Exportez-les avec `docker image save`, transférez l’archive et rechargez-la avec `docker image load` sur le serveur local. Conservez les mêmes noms d’images et démarrez avec `docker compose up -d --no-build --wait`. La synchronisation et les médias restent ensuite sur le LAN ; aucun compte externe n’est requis.
+Sur une machine de préparation connectée, construisez les trois images Screnzly et récupérez l’image PostgreSQL (ainsi que Caddy pour HTTPS). Exportez-les avec `docker image save`, transférez l’archive et rechargez-la avec `docker image load` sur le serveur local. Conservez les mêmes noms d’images et démarrez avec `docker compose up -d --no-build --wait`. La synchronisation et les médias restent ensuite sur le LAN ; aucun compte externe n’est requis.
 
 ## Diagnostic
 

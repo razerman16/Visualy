@@ -1,4 +1,4 @@
-# Contrat interne MVP Scenzly
+# Contrat interne MVP Screnzly
 
 Toutes les routes sont sous `/api/v1`. JSON sauf upload multipart. Réponse erreurs `{error: string}`. Les listes renvoient directement un tableau. Les entités créées ou modifiées sont renvoyées directement. Dates ISO UTC. Identifiants UUID. URLs média toujours relatives `/api/v1/media/:id/file`.
 

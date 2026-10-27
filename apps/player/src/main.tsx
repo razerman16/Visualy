@@ -40,9 +40,9 @@ function Pairing({ paired, notice }: { paired: (token: string) => void; notice: 
     void poll(); const interval = setInterval(() => void poll(), 3000);
     return () => { controller.abort(); clearInterval(interval); };
   }, [id, paired]);
-  return <div className="pairing"><div className="pairing-top"><div className="brand"><Mark /><span>scenzly<span className="brand-dot">.</span></span></div><span className="pill"><span className="status-dot" /> Lecteur local</span></div>
+  return <div className="pairing"><div className="pairing-top"><div className="brand"><Mark /><span>screnzly<span className="brand-dot">.</span></span></div><span className="pill"><span className="status-dot" /> Lecteur local</span></div>
     <main className="pair-card"><div className="screen-icon"><svg viewBox="0 0 72 72" fill="none"><rect x="8" y="12" width="56" height="38" rx="5" stroke="currentColor" strokeWidth="3"/><path d="M25 61h22M36 51v10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><path d="m31 25 12 6-12 7V25Z" fill="currentColor"/></svg></div>
-      <span className="eyebrow">CONNECTONS VOTRE ÉCRAN</span><h1>Votre prochain message<br/><span>commence ici.</span></h1><p>Dans l’administration Scenzly, ouvrez <strong>Écrans</strong>,<br/>puis associez cet écran avec le code ci-dessous.</p>
+      <span className="eyebrow">CONNECTONS VOTRE ÉCRAN</span><h1>Votre prochain message<br/><span>commence ici.</span></h1><p>Dans l’administration Screnzly, ouvrez <strong>Écrans</strong>,<br/>puis associez cet écran avec le code ci-dessous.</p>
       <div className="pair-code" aria-live="polite" aria-label="Code de jumelage">{pair?.code || '••• •••'}</div>
       <div className="waiting"><span className="pulse-dot" />{pair ? 'En attente de votre confirmation' : 'Connexion au serveur local…'}</div>
       {notice && <p className="notice" role="status">{notice}</p>}{error && <p className="notice error" role="alert">{error}</p>}
@@ -117,7 +117,7 @@ function App() {
   return <div className={`player ${showControls ? 'controls-visible' : ''}`} onPointerMove={() => setShowControls(true)} onClick={() => setShowControls(true)} onKeyDown={() => setShowControls(true)} tabIndex={-1}>
     {maintenance ? <Fallback title="Maintenance en cours" message="La diffusion reprendra dès la fin de l’intervention." /> : program && prepared ? <Playback key={`${program.id}:${program.version}`} program={program} urls={prepared.urls} now={now} onItem={onItem} onError={onError} /> : <Fallback title={prepared ? undefined : 'Préparation de votre écran'} message={prepared ? undefined : 'Téléchargement et vérification de vos contenus…'} />}
     {(offline || status) && <div className="diagnostic" role="status"><span className={`status-dot ${offline ? 'amber' : ''}`} />{offline ? `Hors connexion · ${prepared ? 'dernière programmation conservée' : status}` : status}</div>}
-    {showControls && <div className="player-toolbar"><span>{prepared?.manifest.screen.name || 'Scenzly'}</span><button onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => setStatus('Activez le mode plein écran du navigateur (F11).')); else void document.exitFullscreen(); }}>Plein écran</button></div>}
+    {showControls && <div className="player-toolbar"><span>{prepared?.manifest.screen.name || 'Screnzly'}</span><button onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => setStatus('Activez le mode plein écran du navigateur (F11).')); else void document.exitFullscreen(); }}>Plein écran</button></div>}
   </div>;
 }
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: string }> {
