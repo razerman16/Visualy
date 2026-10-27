@@ -33,6 +33,18 @@ assert.equal(user.role,'superadmin');
 await req('/auth/me');
 await req('/auth/setup',{method:'POST',body:{email:'intruder@example.test',password,name:'Intruder'},status:409});
 
+// Exercise the persisted PDF queue and publication-ready generated page.
+let pdf='%PDF-1.4\n';const offsets=[0];
+for(const [i,obj] of ['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>'].entries()){offsets.push(Buffer.byteLength(pdf));pdf+=`${i+1} 0 obj\n${obj}\nendobj\n`;}
+const xref=Buffer.byteLength(pdf);pdf+=`xref\n0 4\n0000000000 65535 f \n`+offsets.slice(1).map(n=>`${String(n).padStart(10,'0')} 00000 n \n`).join('')+`trailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+const pdfForm=new FormData();pdfForm.append('file',new Blob([pdf],{type:'application/pdf'}),'recette.pdf');
+await req('/imports/pdf',{auth:null,status:401});
+const imported=await req('/imports/pdf',{method:'POST',body:pdfForm,status:202});
+let pdfJob;
+for(let i=0;i<30;i++){pdfJob=(await req('/imports/pdf')).find(j=>j.id===imported.id);if(pdfJob.status!=='pending')break;await new Promise(r=>setTimeout(r,1000));}
+assert.equal(pdfJob.status,'done',pdfJob.error);assert.equal(pdfJob.mediaIds.length,1);
+const pageMedia=(await req('/media')).find(m=>m.id===pdfJob.mediaIds[0]);assert.equal(pageMedia.mime,'image/png');
+
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64');
 const upload = new FormData();upload.append('file',new Blob([png],{type:'image/png'}),'recette.png');
 const media = await req('/media',{method:'POST',body:upload});

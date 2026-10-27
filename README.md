@@ -73,6 +73,20 @@ Les détails du contrat sont dans [docs/api-contract.md](docs/api-contract.md). 
 
 ## Périmètre de cette première version
 
-Cette base couvre le parcours local de création, publication, jumelage et diffusion. Elle n’implémente pas encore la totalité du cahier des charges : conversion PDF et transcodage vidéo asynchrones, import PowerPoint, éditeur avancé avec groupes/annuler-rétablir, historique de restauration des versions, récupération de compte par email, quotas par organisation et intégrations matérielles restent à développer. Les outils FFmpeg et Poppler sont présents dans l’image API pour les futurs traitements, sans promettre de conversion automatique.
+Cette base couvre le parcours local de création, publication, jumelage et diffusion. Elle n’implémente pas encore la totalité du cahier des charges : transcodage vidéo asynchrone, import PowerPoint, éditeur avancé avec groupes/annuler-rétablir, historique de restauration des versions, récupération de compte par email, quotas par organisation et intégrations matérielles restent à développer. Les outils FFmpeg et Poppler sont présents dans l’image API pour les futurs traitements, sans promettre de conversion automatique.
 
 Les vidéos sont lues sans son par défaut pour respecter les règles d’autoplay des navigateurs. Le démarrage automatique en mode kiosque, l’heure NTP, l’allumage de la dalle et sa mise en veille se configurent sur l’appareil. Les événements de lecture décrivent le rendu du navigateur ; ils ne prouvent pas l’affichage physique de la dalle. La recette matérielle, les performances 4K et l’autonomie hors connexion doivent être vérifiées sur vos écrans cibles.
+
+## PostgreSQL 18 et import PDF
+
+Les nouvelles installations utilisent PostgreSQL 18, avec le volume `scenzly_postgres18-data` monté sur `/var/lib/postgresql` (organisation propre aux images PostgreSQL 18).
+
+**Installation existante PostgreSQL 17 : ne lancez pas directement `docker compose up`.** Après récupération du nouveau code, et pendant que votre ancien conteneur PostgreSQL 17 fonctionne, lancez :
+
+```sh
+sh scripts/migrate-postgres18.sh
+```
+
+Le script construit les images, sauvegarde la base et les médias, arrête les écritures, démarre PostgreSQL 18 dans un nouveau volume et restaure les données. Il refuse une cible non vide. Le volume PostgreSQL 17 et la sauvegarde restent conservés. En cas d’échec de restauration, l’API reste arrêtée ; conservez les volumes et utilisez la sauvegarde pour diagnostiquer. Ne supprimez aucun ancien volume avant validation.
+
+Dans **Médiathèque → Documents PDF**, importez un document (25 Mo, 50 pages maximum). Le traitement en arrière-plan crée une image PNG par page, disponible pour les scènes et programmes. La file est persistée dans PostgreSQL et reprise au redémarrage. L’interface affiche les imports en attente, terminés ou en erreur. Le traitement est exécuté par l’API, à concurrence limitée à un document par instance ; la conversion vidéo reste à implémenter.

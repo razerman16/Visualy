@@ -1,13 +1,13 @@
 name: scenzly
 services:
   postgres:
-    image: postgres:17-bookworm
+    image: postgres:18-bookworm
     environment:
       POSTGRES_DB: scenzly
       POSTGRES_USER: scenzly
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Executez sh scripts/init-env.sh pour creer .env}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres18-data:/var/lib/postgresql
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U scenzly -d scenzly"]
       interval: 5s
@@ -52,7 +52,7 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: [CMD, wget, -q, --spider, http://127.0.0.1/]
+      test: [CMD, wget, -Y, "off", -q, -O, /dev/null, http://127.0.0.1/]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -69,12 +69,12 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: [CMD, wget, -q, --spider, http://127.0.0.1/]
+      test: [CMD, wget, -Y, "off", -q, -O, /dev/null, http://127.0.0.1/]
       interval: 15s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
 volumes:
-  postgres-data:
+  postgres18-data:
   media-data:

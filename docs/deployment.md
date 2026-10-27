@@ -8,7 +8,7 @@ Navigateurs administrateurs → :8080 admin-web ─┐
 Navigateurs écrans          → :8081 player-web ┘           → volume des médias
 ```
 
-Seuls les ports web sont publiés. Les fichiers et données sont conservés dans les volumes Docker `scenzly_media-data` et `scenzly_postgres-data`. `docker compose down` préserve ces volumes ; `docker compose down -v` les supprime. Les conteneurs redémarrent automatiquement avec Docker, sauf s’ils ont été arrêtés explicitement.
+Seuls les ports web sont publiés. Les fichiers et données sont conservés dans les volumes Docker `scenzly_media-data` et `scenzly_postgres18-data`. `docker compose down` préserve ces volumes ; `docker compose down -v` les supprime. Les conteneurs redémarrent automatiquement avec Docker, sauf s’ils ont été arrêtés explicitement.
 
 Ne créez pas de redirection de ports sur votre box pour une installation LAN. Autorisez les ports choisis dans le pare-feu du serveur uniquement pour le réseau des administrateurs et des écrans. Réservez une adresse DHCP fixe au serveur. L’application ne configure pas le réseau ou le démarrage kiosque à la place de votre système.
 
@@ -126,3 +126,5 @@ Sur une machine de préparation connectée, construisez les trois images Screnzl
 - Horaires décalés : synchronisez le système des écrans par NTP. Le planificateur applique le fuseau IANA de la campagne et traite les créneaux traversant minuit.
 
 Ne publiez pas les journaux complets ou les sauvegardes : ils peuvent contenir des données internes. Les journaux nginx omettent volontairement la chaîne de requête, qui peut transporter un jeton de lecteur.
+
+Pour migrer une installation PostgreSQL 17, suivre la section PostgreSQL 18 du README avant tout redémarrage avec le nouveau fichier Compose. Le volume 17 ne doit jamais être monté directement dans PostgreSQL 18.

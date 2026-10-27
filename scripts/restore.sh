@@ -18,7 +18,7 @@ if [ -z "$scenzly_api_id" ]; then
     printf '%s\n' 'Executez docker compose up -d --build --wait avant la restauration.' >&2
     exit 1
 fi
-docker compose stop -t 30 api
+docker compose stop -t 150 api
 # Keep the API stopped on any failure; never serve a partially restored database.
 docker compose exec -T postgres pg_restore --exit-on-error --clean --if-exists --no-owner --no-privileges -U scenzly -d scenzly < "$scenzly_restore_dir/database.dump"
 docker compose run --rm --no-deps -T --user root --entrypoint sh api -c '

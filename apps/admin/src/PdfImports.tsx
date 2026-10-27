@@ -1,0 +1,8 @@
+import {useEffect,useState} from 'react';
+import {api} from './api';
+type Job={id:string;name:string;status:string;error?:string;mediaIds:string[]};
+export default function PdfImports({editable,onComplete}:{editable:boolean;onComplete:()=>Promise<void>}){
+ const [jobs,setJobs]=useState<Job[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ useEffect(()=>{let live=true;let previous='';async function poll(){try{const rows=await api<Job[]>('/imports/pdf');if(!live)return;setJobs(rows);const completed=rows.filter(j=>j.status==='done').map(j=>j.id).join();if(previous&&completed!==previous)await onComplete();previous=completed||'-';}catch(e){if(live)setError((e as Error).message)}}void poll();const timer=setInterval(()=>void poll(),3000);return()=>{live=false;clearInterval(timer)}},[]);
+ return <section className="panel"><h2>Documents PDF</h2><p>Chaque page devient une image utilisable dans vos scènes et programmes. Jusqu’à 25 Mo et 50 pages.</p>{editable&&<label>Importer un PDF<input type="file" accept="application/pdf,.pdf" disabled={busy} onChange={async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;setBusy(true);setError('');try{const form=new FormData();form.append('file',file);await api('/imports/pdf','POST',form);setJobs(await api<Job[]>('/imports/pdf'));}catch(err){setError((err as Error).message)}finally{setBusy(false)}}}/></label>}{error&&<p role="alert">{error}</p>}{jobs.slice(0,10).map(j=><p key={j.id}><strong>{j.name}</strong> — {j.status==='done'?`${j.mediaIds.length} page(s) disponible(s)`:j.status==='error'?j.error:'En attente / conversion en cours…'}</p>)}</section>
+}

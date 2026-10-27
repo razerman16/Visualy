@@ -33,7 +33,7 @@ cleanup() {
 trap cleanup 0
 trap 'exit 130' INT
 trap 'exit 143' TERM
-docker compose stop -t 30 api >&2
+docker compose stop -t 150 api >&2
 docker compose exec -T postgres pg_dump -U scenzly -d scenzly --format=custom > "$scenzly_backup_dir/database.dump"
 mkdir "$scenzly_temp_dir/media"
 docker compose cp api:/data/media/. "$scenzly_temp_dir/media/" >&2
