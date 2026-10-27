@@ -1,3 +1,4 @@
+import '@fontsource-variable/manrope/index.css';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { selectProgram, type Manifest } from '@scenzly/shared';
@@ -40,7 +41,7 @@ function Pairing({ paired, notice }: { paired: (token: string) => void; notice: 
     void poll(); const interval = setInterval(() => void poll(), 3000);
     return () => { controller.abort(); clearInterval(interval); };
   }, [id, paired]);
-  return <div className="pairing"><div className="pairing-top"><div className="brand"><Mark /><span>screnzly<span className="brand-dot">.</span></span></div><span className="pill"><span className="status-dot" /> Lecteur local</span></div>
+  return <div className="pairing"><div className="pairing-top"><div className="brand"><img className="brand-logo" src="/brand/screnzly-logo.png" alt="Screnzly"/></div><span className="pill"><span className="status-dot" /> Lecteur local</span></div>
     <main className="pair-card"><div className="screen-icon"><svg viewBox="0 0 72 72" fill="none"><rect x="8" y="12" width="56" height="38" rx="5" stroke="currentColor" strokeWidth="3"/><path d="M25 61h22M36 51v10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><path d="m31 25 12 6-12 7V25Z" fill="currentColor"/></svg></div>
       <span className="eyebrow">CONNECTONS VOTRE ÉCRAN</span><h1>Votre prochain message<br/><span>commence ici.</span></h1><p>Dans l’administration Screnzly, ouvrez <strong>Écrans</strong>,<br/>puis associez cet écran avec le code ci-dessous.</p>
       <div className="pair-code" aria-live="polite" aria-label="Code de jumelage">{pair?.code || '••• •••'}</div>

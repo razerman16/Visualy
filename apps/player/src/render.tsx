@@ -43,7 +43,7 @@ export function Playback({ program, urls, now, onItem, onError }: { program: Pub
   if (media && urls[media.id]) return <MediaView key={item.id} media={media} url={urls[media.id]} onError={onError} />;
   return <Fallback title="Contenu indisponible" message="Le dernier programme disponible sera repris après synchronisation." />;
 }
-export function Mark() { return <div className="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M11 9h18v8H19v4h10v10H11v-8h10v-4H11z" fill="currentColor" /></svg></div>; }
+export function Mark() { return <div className="brand-mark" aria-hidden="true"><img src="/brand/screnzly-mark.png" alt=""/></div>; }
 export function Fallback({ title = 'Votre écran est prêt', message = 'Affectez un programme de secours ou une programmation depuis l’administration.' }: { title?: string; message?: string }) {
   return <div className="fallback"><Mark /><h1>{title}</h1><p>{message}</p><span className="fallback-signature">Screnzly · Affichage dynamique</span></div>;
 }
