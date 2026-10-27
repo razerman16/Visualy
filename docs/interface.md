@@ -6,6 +6,10 @@ Les captures de recette utilisent des données de démonstration isolées, pas l
 
 ## Recette visuelle reproductible
 
+Les commandes en haut de l’administration, de la connexion, de l’éditeur et du lecteur proposent les thèmes clair, sombre et système, ainsi que le français et l’anglais. Par défaut, l’interface est en français et suit le thème du système. Les choix sont conservés dans le stockage local du navigateur et synchronisés entre les onglets de la même origine. L’administration et le lecteur ayant des ports différents, leurs préférences sont indépendantes.
+
+Changer de langue ou de thème conserve les formulaires et les brouillons en cours. Les textes de l’interface sont traduits, tandis que les noms saisis, les médias, les couleurs et le contenu des scènes restent inchangés. Les traductions sont embarquées : aucun service externe n’est appelé et le choix reste disponible dans le lecteur hors connexion une fois son cache installé.
+
 Après `npm ci` et `npm run build`, lancer les interfaces de production dans deux terminaux (API Docker déjà accessible sur le port 8080) :
 
 ```sh
@@ -17,6 +21,7 @@ Puis exécuter, avec Chromium installé :
 
 ```sh
 SCENZLY_ADMIN_URL=http://127.0.0.1:8280 SCENZLY_PLAYER_URL=http://127.0.0.1:8281 node tests/ui/visual-check.mjs
+node tests/ui/preferences.mjs
 node tests/ui/offline-shell.mjs
 ```
 

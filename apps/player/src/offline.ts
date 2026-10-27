@@ -1,3 +1,4 @@
+import {t,translateMessage} from '@scenzly/shared';
 import { sha256 } from '@noble/hashes/sha2.js';
 import type { Manifest, Media } from '@scenzly/shared';
 
@@ -7,14 +8,14 @@ export type Prepared = { manifest: Manifest; urls: Record<string, string>; durab
 export function mediaUrl(media: Pick<Media, 'id' | 'url'>, token: string): string {
   // A manifest cannot instruct the player to transmit its token to another host.
   const expected = `/api/v1/media/${encodeURIComponent(media.id)}/file`;
-  if (media.url !== expected) throw new Error('Adresse média non autorisée.');
+  if (media.url !== expected) throw new Error(t("Adresse média non autorisée."));
   return `${expected}?token=${encodeURIComponent(token)}`;
 }
 export function hashBytes(data: ArrayBuffer): string {
   return Array.from(sha256(new Uint8Array(data)), n => n.toString(16).padStart(2, '0')).join('');
 }
 export function verifyAsset(data: ArrayBuffer, checksum: string): void {
-  if (!/^[a-f\d]{64}$/i.test(checksum) || hashBytes(data) !== checksum.toLowerCase()) throw new Error('Intégrité du média invalide. La dernière version est conservée.');
+  if (!/^[a-f\d]{64}$/i.test(checksum) || hashBytes(data) !== checksum.toLowerCase()) throw new Error(t("Intégrité du média invalide. La dernière version est conservée."));
 }
 export function storedManifest(): Manifest | null {
   try { const raw = localStorage.getItem(MANIFEST_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
@@ -48,7 +49,7 @@ export async function prepareManifest(manifest: Manifest, token: string, signal?
         verifyAsset(bytes, media.checksum);
       } else {
         response = await fetch(url, { signal, cache: 'no-store', credentials: 'omit' });
-        if (!response.ok) throw new Error(`Téléchargement impossible : ${media.name} (${response.status}).`);
+        if (!response.ok) throw new Error(t("Téléchargement impossible : {0} ({1}).", media.name, response.status));
         bytes = await response.arrayBuffer();
         verifyAsset(bytes, media.checksum);
       }

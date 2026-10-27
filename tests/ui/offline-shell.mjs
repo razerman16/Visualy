@@ -6,12 +6,15 @@ try{
  await page.goto(process.env.SCENZLY_PLAYER_URL||'http://127.0.0.1:8281');
  await page.evaluate(()=>navigator.serviceWorker.ready);
  await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
- const cached=await page.evaluate(async()=>{const cache=await caches.open('scenzly-shell-v2');return (await cache.keys()).map(r=>new URL(r.url).pathname)});
+ const cached=await page.evaluate(async()=>{const cache=await caches.open('scenzly-shell-v3');return (await cache.keys()).map(r=>new URL(r.url).pathname)});
  assert.ok(cached.some(p=>p.endsWith('.woff2')),'self-hosted fonts cached');
  assert.ok(cached.includes('/brand/screnzly-logo.png'),'logo cached');
  assert.ok(cached.includes('/brand/screnzly-mark.png'),'mark cached');
- await context.setOffline(true);await page.reload();await page.getByRole('heading',{name:/Votre prochain message/}).waitFor();await page.evaluate(()=>document.fonts.ready);
+ await page.getByRole('combobox',{name:'Langue'}).selectOption('en');await page.getByRole('combobox',{name:'Theme'}).selectOption('dark');
+ await context.setOffline(true);await page.reload();await page.getByRole('heading',{name:/Your next message/}).waitFor();await page.evaluate(()=>document.fonts.ready);
  assert.equal(await page.locator('.brand-logo').evaluate(img=>img.complete&&img.naturalWidth>0),true);
  assert.equal(await page.evaluate(()=>document.fonts.check('16px "Manrope Variable"')),true);
+ assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+ await page.getByRole('combobox',{name:'Language'}).selectOption('fr');await page.getByRole('heading',{name:/Votre prochain message/}).waitFor();
  console.log('PASS: production player shell, logo and local font load after an offline reload.');
 }finally{await browser.close();}

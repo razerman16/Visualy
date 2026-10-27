@@ -27,6 +27,8 @@ Ouvrez l’administration et créez immédiatement le premier compte administrat
 
 ## Premier programme
 
+Les sélecteurs en haut de l’interface permettent de choisir le thème **clair, sombre ou système**, ainsi que la langue **français ou anglais**. Ces préférences sont mémorisées dans le navigateur, séparément pour l’administration et le lecteur. Les noms de vos médias et le contenu des scènes restent inchangés. Voir [le guide de l’interface](docs/interface.md).
+
 1. Importez une image JPEG, PNG ou WebP, ou une vidéo MP4/WebM lisible par vos navigateurs.
 2. Créez une scène ou assemblez les médias dans un programme. Réglez les durées, puis publiez le programme.
 3. Ouvrez le lecteur sur l’écran à associer et recopiez son code dans l’administration.

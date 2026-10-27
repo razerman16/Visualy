@@ -1,3 +1,4 @@
+import {getLocale,t,translateMessage} from '@scenzly/shared';
 export interface User {id:string;email:string;name:string;role:'superadmin'|'admin'|'editor'|'viewer'}
 export interface Media {id:string;name:string;mime:string;size:number;url:string;checksum:string;createdAt:string}
 export interface SceneElement {id:string;type:'text'|'image'|'video'|'shape'|'clock'|'qr';x:number;y:number;width:number;height:number;text?:string;mediaId?:string;color?:string;background?:string;fontSize?:number;fontWeight?:number;opacity?:number;rotation?:number;zIndex?:number}
@@ -13,10 +14,10 @@ export async function api<T>(path:string,method='GET',body?:unknown):Promise<T> 
   const multipart=body instanceof FormData;
   const res=await fetch('/api/v1'+path,{method,credentials:'same-origin',headers:body&&!multipart?{'Content-Type':'application/json'}:undefined,body:body?(multipart?body:JSON.stringify(body)):undefined});
   const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error || data.message || `La requête a échoué (${res.status}).`);
+  if(!res.ok) throw new Error(translateMessage(data.error || data.message || `La requête a échoué (${res.status}).`));
   return data as T;
 }
 export const uid=()=>crypto.randomUUID?.() || '10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(Number(c)^crypto.getRandomValues(new Uint8Array(1))[0]&15>>Number(c)/4).toString(16));
-export const size=(bytes:number)=>bytes<1024*1024?`${Math.round(bytes/1024)} Ko`:`${(bytes/1024/1024).toFixed(1)} Mo`;
-export const date=(v?:string|null)=>v?new Intl.DateTimeFormat('fr-FR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v)):'Jamais';
+export const size=(bytes:number)=>bytes<1024*1024?t('{0} Ko',Math.round(bytes/1024)):t('{0} Mo',(bytes/1024/1024).toFixed(1));
+export const date=(v?:string|null)=>v?new Intl.DateTimeFormat(getLocale(),{dateStyle:'short',timeStyle:'short'}).format(new Date(v)):t('Jamais');
 export const online=(s:Screen)=>s.online??!!(s.lastSeen&&Date.now()-new Date(s.lastSeen).getTime()<90000);

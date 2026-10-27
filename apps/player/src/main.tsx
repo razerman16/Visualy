@@ -1,5 +1,8 @@
+import Preferences from './Preferences';
+import {initializePreferences,subscribePreferences,preferenceSnapshot} from '@scenzly/shared';
+import {t,translateMessage} from '@scenzly/shared';
 import '@fontsource-variable/manrope/index.css';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useSyncExternalStore, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { selectProgram, type Manifest } from '@scenzly/shared';
 import { clearOffline, prepareManifest, storedManifest, type Prepared } from './offline';
@@ -11,12 +14,12 @@ const API = '/api/v1';
 class Revoked extends Error {}
 async function api<T>(path: string, token?: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const response = await fetch(API + path, { method: body === undefined ? 'GET' : 'POST', headers: { ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body), credentials: 'omit', cache: 'no-store', signal });
-  if (token && response.status === 401) throw new Revoked('Cet écran a été dissocié.');
+  if (token && response.status === 401) throw new Revoked(t("Cet écran a été dissocié."));
   const value = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(value.error || `Serveur indisponible (${response.status}).`);
+  if (!response.ok) throw new Error(value.error || t("Serveur indisponible ({0}).", response.status));
   return value;
 }
-function errorMessage(error: unknown) { return error instanceof Error ? error.message : 'Erreur de synchronisation.'; }
+function errorMessage(error: unknown) { return error instanceof Error ? error.message : t("Erreur de synchronisation."); }
 function Pairing({ paired, notice }: { paired: (token: string) => void; notice: string }) {
   const [pair, setPair] = useState<{ code: string; expiresAt: string } | null>(null);
   const [error, setError] = useState('');
@@ -41,21 +44,21 @@ function Pairing({ paired, notice }: { paired: (token: string) => void; notice: 
     void poll(); const interval = setInterval(() => void poll(), 3000);
     return () => { controller.abort(); clearInterval(interval); };
   }, [id, paired]);
-  return <div className="pairing"><div className="pairing-top"><div className="brand"><img className="brand-logo" src="/brand/screnzly-logo.png" alt="Screnzly"/></div><span className="pill"><span className="status-dot" /> Lecteur local</span></div>
+  return <div className="pairing"><div className="pairing-top"><div className="brand"><img className="brand-logo" src="/brand/screnzly-logo.png" alt="Screnzly"/></div><div className="pairing-actions"><Preferences/><span className="pill"><span className="status-dot" />{" "}{t("Lecteur local")}</span></div></div>
     <main className="pair-card"><div className="screen-icon"><svg viewBox="0 0 72 72" fill="none"><rect x="8" y="12" width="56" height="38" rx="5" stroke="currentColor" strokeWidth="3"/><path d="M25 61h22M36 51v10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><path d="m31 25 12 6-12 7V25Z" fill="currentColor"/></svg></div>
-      <span className="eyebrow">CONNECTONS VOTRE ÉCRAN</span><h1>Votre prochain message<br/><span>commence ici.</span></h1><p>Dans l’administration Screnzly, ouvrez <strong>Écrans</strong>,<br/>puis associez cet écran avec le code ci-dessous.</p>
-      <div className="pair-code" aria-live="polite" aria-label="Code de jumelage">{pair?.code || '••• •••'}</div>
-      <div className="waiting"><span className="pulse-dot" />{pair ? 'En attente de votre confirmation' : 'Connexion au serveur local…'}</div>
-      {notice && <p className="notice" role="status">{notice}</p>}{error && <p className="notice error" role="alert">{error}</p>}
-      {!isSecureContext && <p className="context-note">Lecture disponible sur le réseau local.<br/>Activez HTTPS pour conserver les contenus après un redémarrage hors connexion.</p>}
-    </main><footer className="pair-footer"><span>Votre contenu. Vos écrans. Votre réseau.</span><span title={id}>Appareil {id.slice(0, 8)}</span></footer></div>;
+      <span className="eyebrow">{t("CONNECTONS VOTRE ÉCRAN")}</span><h1>{t("Votre prochain message")}<br/><span>{t("commence ici.")}</span></h1><p>{t("Dans l’administration Screnzly, ouvrez")}{" "}<strong>{t("Écrans")}</strong>,<br/>{t("puis associez cet écran avec le code ci-dessous.")}</p>
+      <div className="pair-code" aria-live="polite" aria-label={t("Code de jumelage")}>{pair?.code || '••• •••'}</div>
+      <div className="waiting"><span className="pulse-dot" />{pair ? t("En attente de votre confirmation") : t("Connexion au serveur local…")}</div>
+      {notice && <p className="notice" role="status">{translateMessage(notice)}</p>}{error && <p className="notice error" role="alert">{translateMessage(error)}</p>}
+      {!isSecureContext && <p className="context-note">{t("Lecture disponible sur le réseau local.")}<br/>{t("Activez HTTPS pour conserver les contenus après un redémarrage hors connexion.")}</p>}
+    </main><footer className="pair-footer"><span>{t("Votre contenu. Vos écrans. Votre réseau.")}</span><span title={id}>{t("Appareil")}{" "}{id.slice(0, 8)}</span></footer></div>;
 }
 function App() {
   const [token, setToken] = useState(() => localStorage.getItem('scenzly-player-token') || '');
   const [prepared, setPrepared] = useState<Prepared | null>(null);
   const active = useRef<Prepared | null>(null);
   const [now, setNow] = useState(new Date());
-  const [status, setStatus] = useState('Synchronisation en cours…');
+  const [status, setStatus] = useState(t("Synchronisation en cours…"));
   const [notice, setNotice] = useState('');
   const [offline, setOffline] = useState(false);
   const [maintenance, setMaintenance] = useState(localStorage.getItem('scenzly-maintenance') === 'true');
@@ -70,7 +73,7 @@ function App() {
   useEffect(() => { const interval = setInterval(() => setNow(new Date()), 250); return () => clearInterval(interval); }, []);
   useEffect(() => { if (!showControls) return; const timer = setTimeout(() => setShowControls(false), 6000); return () => clearTimeout(timer); }, [showControls]);
   useEffect(() => {
-    if ('serviceWorker' in navigator && isSecureContext && import.meta.env.PROD) navigator.serviceWorker.register('/sw.js').catch(() => setStatus('Cache de la page indisponible : vérifiez le stockage du navigateur.'));
+    if ('serviceWorker' in navigator && isSecureContext && import.meta.env.PROD) navigator.serviceWorker.register('/sw.js').catch(() => setStatus(t("Cache de la page indisponible : vérifiez le stockage du navigateur.")));
   }, []);
   useEffect(() => {
     if (!token) return;
@@ -79,7 +82,7 @@ function App() {
       if (controller.signal.aborted) { next.release(); return; }
       const previous = active.current; active.current = next; setPrepared(next);
       if (previous) setTimeout(previous.release, 2000);
-      setStatus(next.durable ? '' : 'HTTPS requis pour le cache après redémarrage.');
+      setStatus(next.durable ? '' : t("HTTPS requis pour le cache après redémarrage."));
     };
     async function sync() {
       if (busy || controller.signal.aborted) return; busy = true;
@@ -98,12 +101,12 @@ function App() {
         }
         if (events.current.length) { const batch = events.current.splice(0, 25); try { await api('/players/me/events', token, { events: batch }, controller.signal); } catch (err) { events.current.unshift(...batch); if (err instanceof Revoked) throw err; } }
         setOffline(false);
-        setStatus(lastError.current || (active.current?.durable ? '' : 'HTTPS requis pour le cache après redémarrage.'));
+        setStatus(lastError.current || (active.current?.durable ? '' : t("HTTPS requis pour le cache après redémarrage.")));
       } catch (err) {
         if (controller.signal.aborted) return;
         if (err instanceof Revoked) {
           localStorage.removeItem('scenzly-player-token'); localStorage.removeItem('scenzly-maintenance');
-          await clearOffline().catch(() => {}); active.current?.release(); active.current = null; setPrepared(null); setMaintenance(false); setNotice('Écran dissocié : utilisez ce nouveau code pour le reconnecter.'); events.current = []; setToken('');
+          await clearOffline().catch(() => {}); active.current?.release(); active.current = null; setPrepared(null); setMaintenance(false); setNotice(t("Écran dissocié : utilisez ce nouveau code pour le reconnecter.")); events.current = []; setToken('');
         } else { setOffline(true); setStatus(errorMessage(err)); }
       } finally { busy = false; }
     }
@@ -114,16 +117,18 @@ function App() {
   const selected = prepared ? selectProgram(prepared.manifest.schedules, now, prepared.manifest.fallbackProgramId) : null;
   const program = prepared?.manifest.programs.find(p => p.id === selected);
   currentProgram.current = maintenance ? null : program?.id || null;
-  if (!token) return <Pairing paired={paired} notice={notice} />;
+  if (!token) return <Pairing paired={paired} notice={translateMessage(notice)} />;
   return <div className={`player ${showControls ? 'controls-visible' : ''}`} onPointerMove={() => setShowControls(true)} onClick={() => setShowControls(true)} onKeyDown={() => setShowControls(true)} tabIndex={-1}>
-    {maintenance ? <Fallback title="Maintenance en cours" message="La diffusion reprendra dès la fin de l’intervention." /> : program && prepared ? <Playback key={`${program.id}:${program.version}`} program={program} urls={prepared.urls} now={now} onItem={onItem} onError={onError} /> : <Fallback title={prepared ? undefined : 'Préparation de votre écran'} message={prepared ? undefined : 'Téléchargement et vérification de vos contenus…'} />}
-    {(offline || status) && <div className="diagnostic" role="status"><span className={`status-dot ${offline ? 'amber' : ''}`} />{offline ? `Hors connexion · ${prepared ? 'dernière programmation conservée' : status}` : status}</div>}
-    {showControls && <div className="player-toolbar"><span>{prepared?.manifest.screen.name || 'Screnzly'}</span><button onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => setStatus('Activez le mode plein écran du navigateur (F11).')); else void document.exitFullscreen(); }}>Plein écran</button></div>}
+    {maintenance ? <Fallback title={t("Maintenance en cours")} message={t("La diffusion reprendra dès la fin de l’intervention.")} /> : program && prepared ? <Playback key={`${program.id}:${program.version}`} program={program} urls={prepared.urls} now={now} onItem={onItem} onError={onError} /> : <Fallback title={prepared ? undefined : t("Préparation de votre écran")} message={prepared ? undefined : t("Téléchargement et vérification de vos contenus…")} />}
+    {(offline || status) && <div className="diagnostic" role="status"><span className={`status-dot ${offline ? 'amber' : ''}`} />{offline ? t("Hors connexion · {0}", prepared ? t("dernière programmation conservée") : status) : translateMessage(status)}</div>}
+    {showControls && <div className="player-toolbar"><Preferences/><span>{prepared?.manifest.screen.name || 'Screnzly'}</span><button onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => setStatus(t("Activez le mode plein écran du navigateur (F11)."))); else void document.exitFullscreen(); }}>{t("Plein écran")}</button></div>}
   </div>;
 }
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: string }> {
   state = { error: '' };
   static getDerivedStateFromError(error: Error) { return { error: error.message }; }
-  render() { return this.state.error ? <Fallback title="Le lecteur ne peut pas démarrer" message={`Vérifiez que le stockage local du navigateur est autorisé. ${this.state.error}`} /> : this.props.children; }
+  render() { return this.state.error ? <Fallback title={t("Le lecteur ne peut pas démarrer")} message={t("Vérifiez que le stockage local du navigateur est autorisé. {0}", this.state.error)} /> : this.props.children; }
 }
-createRoot(document.getElementById('root')!).render(<ErrorBoundary><App /></ErrorBoundary>);
+initializePreferences('player');
+function Root(){useSyncExternalStore(subscribePreferences,preferenceSnapshot);return <ErrorBoundary><App/></ErrorBoundary>}
+createRoot(document.getElementById('root')!).render(<Root/>);

@@ -1,5 +1,5 @@
 /* Cache only the player shell. Media is stored by the page after SHA-256 verification. */
-const SHELL_CACHE = 'scenzly-shell-v2';
+const SHELL_CACHE = 'scenzly-shell-v3';
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
