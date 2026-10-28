@@ -25,8 +25,8 @@ CADDY_HTTP_PORT=80
 CADDY_HTTPS_PORT=443
 DEV_ADMIN_PORT=8080
 DEV_PLAYER_PORT=8081
-ADMIN_DOMAIN=admin.scenzly.home.arpa
-PLAYER_DOMAIN=player.scenzly.home.arpa
+ADMIN_DOMAIN=admin.visualy.home.arpa
+PLAYER_DOMAIN=player.visualy.home.arpa
 DEFAULTS
 unset key value
 printf '%s\n' '.env prepare (permissions 600). Secrets existants conserves.' 'Pour la premiere installation, utilisez SETUP_TOKEN de .env dans le formulaire.' 'Configurez ADMIN_DOMAIN, PLAYER_DOMAIN, CADDY_HTTP_PORT et CADDY_HTTPS_PORT, puis approuvez le certificat HTTPS local.'

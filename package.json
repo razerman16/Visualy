@@ -1,5 +1,5 @@
 {
-  "name": "scenzly",
+  "name": "visualy",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -7,11 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @scenzly/shared && npm run build -w @scenzly/api && npm run build -w @scenzly/admin && npm run build -w @scenzly/player",
+    "build": "npm run build -w @visualy/shared && npm run build -w @visualy/api && npm run build -w @visualy/admin && npm run build -w @visualy/player",
     "test": "npm run test --workspaces --if-present",
-    "dev:api": "npm run dev -w @scenzly/api",
-    "dev:admin": "npm run dev -w @scenzly/admin",
-    "dev:player": "npm run dev -w @scenzly/player",
+    "dev:api": "npm run dev -w @visualy/api",
+    "dev:admin": "npm run dev -w @visualy/admin",
+    "dev:player": "npm run dev -w @visualy/player",
     "test:smoke": "node tests/smoke.mjs",
     "test:security": "tsx --test tests/security/*.test.ts"
   },

@@ -1,6 +1,6 @@
 import '@fontsource-variable/manrope/index.css';
 import React, {useSyncExternalStore} from 'react';
-import {initializePreferences,subscribePreferences,preferenceSnapshot} from '@scenzly/shared';
+import {initializePreferences,subscribePreferences,preferenceSnapshot} from '@visualy/shared';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles.css';

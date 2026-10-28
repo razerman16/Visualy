@@ -29,7 +29,7 @@ export function translateMessage(value:string):string{
  const separator=value.indexOf(': ');if(separator>0){const tail=value.slice(separator+2);const translated=translateMessage(tail);if(translated!==tail)return value.slice(0,separator+2)+translated;}
  return value;
 }
-function apply(){if(typeof document!=='undefined'){document.documentElement.lang=language;document.documentElement.dataset.theme=resolvedTheme();document.documentElement.style.colorScheme=resolvedTheme();document.title=t(app==='admin'?'Screnzly — Administration':'Screnzly · Écran');}for(const callback of listeners)callback();}
+function apply(){if(typeof document!=='undefined'){document.documentElement.lang=language;document.documentElement.dataset.theme=resolvedTheme();document.documentElement.style.colorScheme=resolvedTheme();document.title=t(app==='admin'?'Visualy — Administration':'Visualy · Écran');}for(const callback of listeners)callback();}
 function save(key:string,value:string){try{localStorage.setItem(key,value)}catch{/* Private browsing may deny storage; keep session preferences. */}}
 export function setLanguage(value:Language){if(value!=='fr'&&value!=='en')return;language=value;save('screnzly-language',value);apply();}
 export function setTheme(value:Theme){if(!['light','dark','system'].includes(value))return;theme=value;save('screnzly-theme',value);apply();}

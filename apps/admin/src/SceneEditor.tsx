@@ -1,5 +1,5 @@
 import Preferences from './Preferences';
-import {t,translateMessage} from '@scenzly/shared';
+import {t,translateMessage} from '@visualy/shared';
 import Brand from './Brand';
 import {useEffect,useRef,useState,type CSSProperties,type PointerEvent} from 'react';
 import {ArrowDown,ArrowUp,Check,Clock,Copy,Image,Maximize,MousePointer2,Plus,Save,Square,Trash2,Type,Undo2,Video,X,QrCode} from 'lucide-react';
@@ -8,7 +8,7 @@ import {type Media,type Scene,type SceneElement,uid} from './api';
 
 function QR({text}:{text:string}) {
   const [src,setSrc]=useState('');
-  useEffect(()=>{let active=true;QRCode.toDataURL(text||'Screnzly',{margin:1,width:512}).then(v=>{if(active)setSrc(v)}).catch(()=>{if(active)setSrc('')});return()=>{active=false}},[text]);
+  useEffect(()=>{let active=true;QRCode.toDataURL(text||'Visualy',{margin:1,width:512}).then(v=>{if(active)setSrc(v)}).catch(()=>{if(active)setSrc('')});return()=>{active=false}},[text]);
   return src?<img src={src} alt={t("QR code")} draggable={false}/>:<span>QR</span>;
 }
 export function SceneContent({scene,media,scale=1,onSelect,selectedId,onDrag}:{scene:Scene;media:Media[];scale?:number;onSelect?:(id:string)=>void;selectedId?:string;onDrag?:(event:PointerEvent<HTMLElement>,element:SceneElement,resize:boolean)=>void}) {

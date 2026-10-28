@@ -1,5 +1,5 @@
 /* Cache only the player shell. Media is stored by the page after SHA-256 verification. */
-const SHELL_CACHE = 'scenzly-shell-v4';
+const SHELL_CACHE = 'scenzly-shell-v5';
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
@@ -7,7 +7,7 @@ self.addEventListener('install', event => {
     if (!response.ok) throw new Error('Player shell unavailable');
     const html = await response.clone().text();
     const assetPaths = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)].map(m => m[1]).filter(p => p.startsWith('/assets/'));
-    await cache.addAll([...new Set([...assetPaths, '/preferences-init.js', '/manifest.webmanifest', '/brand/screnzly-logo.png', '/brand/screnzly-mark.png'])]);
+    await cache.addAll([...new Set([...assetPaths, '/preferences-init.js', '/manifest.webmanifest', '/brand/visualy-logo.png', '/brand/visualy-logo-dark.png', '/brand/visualy-mark.png'])]);
     // Fonts referenced by the stylesheet must also be available offline.
     for (const path of assetPaths.filter(path => path.endsWith('.css'))) {
       const css = await (await cache.match(path)).text();
@@ -28,9 +28,9 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).catch(async () => {
       const cached = await caches.match('/', { cacheName: SHELL_CACHE });
-      return cached || new Response('Screnzly : premier démarrage hors ligne impossible.', { status: 503 });
+      return cached || new Response('Visualy : premier démarrage hors ligne impossible.', { status: 503 });
     }));
-  } else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/brand/') || ['/preferences-init.js', '/icon.svg', '/manifest.webmanifest'].includes(url.pathname)) {
+  } else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/brand/') || ['/preferences-init.js', '/manifest.webmanifest'].includes(url.pathname)) {
     event.respondWith(caches.match(event.request, { cacheName: SHELL_CACHE, ignoreVary: true }).then(cached => cached || fetch(event.request)));
   }
 });

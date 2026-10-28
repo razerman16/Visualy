@@ -1,4 +1,4 @@
-import type { PlaylistItem } from '@scenzly/shared';
+import type { PlaylistItem } from '@visualy/shared';
 export function playlistPosition(items: PlaylistItem[], elapsedMs: number): { item: PlaylistItem; index: number } | null {
   if (!items.length) return null;
   const durations = items.map(item => Math.max(1, Number.isFinite(item.duration) ? item.duration : 10) * 1000);

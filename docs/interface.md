@@ -1,8 +1,8 @@
-# Identité visuelle Screnzly
+# Identité visuelle Visualy
 
-L’interface conserve les sections et l’agencement du tableau de bord. La navigation claire, les titres bleu nuit et les accents cyan/bleu/violet reprennent le logo fourni. Les fichiers `public/brand` contiennent ses déclinaisons horizontale et icône adaptées pour l’application. La police Manrope est distribuée localement avec les applications ; aucun CDN ni appel à Google Fonts n’est requis.
+L’interface conserve les sections et l’agencement du tableau de bord. La navigation claire, les titres bleu nuit et les accents cyan/bleu/violet reprennent le logo fourni. Les fichiers `public/brand` contiennent des déclinaisons adaptées du logo Visualy fourni : `visualy-logo.png` (horizontal transparent), `visualy-logo-dark.png` (lettrage clair sur fond bleu nuit) et `visualy-mark.png` (icône transparente). Le logo suit le thème choisi, y compris le mode système. Le lecteur met ces trois fichiers en cache pour fonctionner hors connexion. La police Manrope est distribuée localement avec les applications ; aucun CDN ni appel à Google Fonts n’est requis.
 
-Les captures de recette utilisent des données de démonstration isolées, pas les données d’une installation. La capture du tableau de bord figure dans `screenshots/dashboard.png`.
+Les captures de recette utilisent des données de démonstration isolées, pas les données d’une installation. Les captures du tableau de bord figurent dans `screenshots/dashboard.png` (clair, français) et `screenshots/dashboard-dark-en.png` (sombre, anglais).
 
 ## Recette visuelle reproductible
 
@@ -13,8 +13,8 @@ Changer de langue ou de thème conserve les formulaires et les brouillons en cou
 Après `npm ci` et `npm run build`, lancer les interfaces de production dans deux terminaux (API Docker déjà accessible sur le port 8080) :
 
 ```sh
-API_URL=http://127.0.0.1:8080 npm run preview -w @scenzly/admin -- --host 127.0.0.1 --port 8280
-API_URL=http://127.0.0.1:8080 npm run preview -w @scenzly/player -- --host 127.0.0.1 --port 8281
+API_URL=http://127.0.0.1:8080 npm run preview -w @visualy/admin -- --host 127.0.0.1 --port 8280
+API_URL=http://127.0.0.1:8080 npm run preview -w @visualy/player -- --host 127.0.0.1 --port 8281
 ```
 
 Puis exécuter, avec Chromium installé :
@@ -26,3 +26,10 @@ node tests/ui/offline-shell.mjs
 ```
 
 `SCENZLY_CHROMIUM` permet de choisir le binaire du navigateur. Les captures sont enregistrées dans `/tmp/screnzly-design`, ou le répertoire `SCENZLY_SCREENSHOTS`. La recette vérifie la navigation, les formulaires de jumelage, l’éditeur, les versions mobiles, les erreurs JavaScript et les débordements horizontaux. Le test hors connexion vérifie le cache de la page du lecteur, du logo et des polices ; il ne remplace pas les tests de diffusion des médias.
+
+## Validation du passage à Visualy
+
+- Compilation complète des quatre packages `@visualy/*`, 32 tests applicatifs et 5 tests de sécurité : réussis.
+- Recette Chromium : navigation, éditeur, connexion, jumelage visuel, vues mobiles, thèmes clair/sombre/système et français/anglais ; aucun débordement horizontal ni erreur JavaScript.
+- Mise à jour du lecteur : ancien cache d’interface remplacé, cache média et identifiant appareil préservés ; nouveau logo sombre, traductions et polices disponibles après rechargement hors connexion.
+- Configuration Docker Compose validée ; aucun volume ou secret existant modifié.

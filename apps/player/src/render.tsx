@@ -1,12 +1,12 @@
-import {t,translateMessage} from '@scenzly/shared';
+import {t,translateMessage} from '@visualy/shared';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import type { Media, Scene, SceneElement, PublishedProgram } from '@scenzly/shared';
+import type { Media, Scene, SceneElement, PublishedProgram } from '@visualy/shared';
 import { playlistPosition } from './playback';
 
 function Qr({ text }: { text: string }) {
   const [src, setSrc] = useState('');
-  useEffect(() => { let live = true; QRCode.toDataURL(text || 'Screnzly', { margin: 1, width: 512, errorCorrectionLevel: 'M' }).then(value => { if (live) setSrc(value); }).catch(() => { if (live) setSrc(''); }); return () => { live = false; }; }, [text]);
+  useEffect(() => { let live = true; QRCode.toDataURL(text || 'Visualy', { margin: 1, width: 512, errorCorrectionLevel: 'M' }).then(value => { if (live) setSrc(value); }).catch(() => { if (live) setSrc(''); }); return () => { live = false; }; }, [text]);
   return src ? <img src={src} className="element-asset" alt={t("QR code")} /> : null;
 }
 function Element({ element: e, urls, now, onError }: { element: SceneElement; urls: Record<string, string>; now: Date; onError: (error: string) => void }) {
@@ -44,7 +44,7 @@ export function Playback({ program, urls, now, onItem, onError }: { program: Pub
   if (media && urls[media.id]) return <MediaView key={item.id} media={media} url={urls[media.id]} onError={onError} />;
   return <Fallback title={t("Contenu indisponible")} message={t("Le dernier programme disponible sera repris après synchronisation.")} />;
 }
-export function Mark() { return <div className="brand-mark" aria-hidden="true"><img src="/brand/screnzly-mark.png" alt=""/></div>; }
+export function Mark() { return <div className="brand-mark" aria-hidden="true"><img src="/brand/visualy-mark.png" alt=""/></div>; }
 export function Fallback({ title = t("Votre écran est prêt"), message = t("Affectez un programme de secours ou une programmation depuis l’administration.") }: { title?: string; message?: string }) {
-  return <div className="fallback"><Mark /><h1>{title}</h1><p>{message}</p><span className="fallback-signature">{t("Screnzly · Affichage dynamique")}</span></div>;
+  return <div className="fallback"><Mark /><h1>{title}</h1><p>{message}</p><span className="fallback-signature">{t("Visualy · Affichage dynamique")}</span></div>;
 }

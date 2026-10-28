@@ -1,4 +1,4 @@
-import {t,translateMessage} from '@scenzly/shared';
+import {t,translateMessage} from '@visualy/shared';
 import {useEffect,useRef,useState} from 'react';
 import {AlertCircle,CheckCircle2,Clock3,FileText,Upload,Video} from 'lucide-react';
 import {api} from './api';

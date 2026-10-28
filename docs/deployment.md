@@ -2,6 +2,14 @@
 
 # Déploiement et exploitation sur un réseau local
 
+## Passage de Screnzly à Visualy
+
+Le changement de nom porte sur les interfaces, les logos, les traductions et les packages npm (`@visualy/*`). Mettez à jour le code puis reconstruisez les images avec `docker compose up -d --build --wait`, selon la procédure de mise à jour ci-dessous. Conservez votre `.env` : `scripts/init-env.sh` préserve les domaines et les ports déjà renseignés.
+
+Les identifiants persistants restent volontairement compatibles : projet Compose `scenzly`, volumes, base PostgreSQL, rôle `screnzly_app`, cookie de session, clés navigateur, métadonnées des médias hors connexion et format des sauvegardes. Ne renommez pas le projet Compose et ne supprimez pas ses volumes pour changer la marque. Les comptes, les médias, les jumelages et les préférences restent utilisables à la même adresse. Les rapports de sécurité datés conservent leur nom historique.
+
+Les nouvelles installations proposent `admin.visualy.home.arpa` et `player.visualy.home.arpa`. Une installation existante peut garder ses anciens domaines et afficher Visualy. Changer aussi le domaine ou le port HTTPS change l’origine navigateur : prévoir une nouvelle connexion, un nouveau jumelage et une synchronisation du cache sur chaque écran concerné. Le nouveau logo hors connexion est disponible après une connexion au serveur mis à jour ; les médias déjà en cache sont conservés.
+
 ## Architecture
 
 ```text
@@ -29,8 +37,8 @@ Le script `sh scripts/init-env.sh` génère `.env` sans afficher son secret. Var
 | `SETUP_TOKEN` | aléatoire | Clé de création du premier compte |
 | `CONVERTER_TOKEN` | aléatoire | Authentification interne du convertisseur |
 | `MEDIA_QUOTA_MB` | `10240` | Quota média avec réservations d’import |
-| `ADMIN_DOMAIN` | `admin.scenzly.home.arpa` | Nom DNS local HTTPS |
-| `PLAYER_DOMAIN` | `player.scenzly.home.arpa` | Nom DNS local HTTPS |
+| `ADMIN_DOMAIN` | `admin.visualy.home.arpa` | Nom DNS local HTTPS |
+| `PLAYER_DOMAIN` | `player.visualy.home.arpa` | Nom DNS local HTTPS |
 
 Le mot de passe est incorporé dans une URL PostgreSQL : utilisez le script ou une valeur hexadécimale. Modifier `.env` après initialisation ne modifie pas le mot de passe de la base déjà créée. Une rotation nécessite aussi `ALTER ROLE` dans PostgreSQL, puis une recréation du conteneur API ; ne supprimez pas les volumes pour changer un mot de passe.
 
@@ -44,7 +52,7 @@ Le service ponctuel `migrate` met à niveau le schéma avant le démarrage de l�
 
 ## HTTPS local et cache hors connexion
 
-1. Configurez dans le DNS local (routeur, Pi-hole, serveur DNS interne) les noms `admin.scenzly.home.arpa` et `player.scenzly.home.arpa` vers l’IP LAN du serveur. À défaut, ajoutez les entrées aux fichiers hosts des postes qui le permettent. Les deux noms doivent être résolus par chaque écran.
+1. Configurez dans le DNS local (routeur, Pi-hole, serveur DNS interne) les noms `admin.visualy.home.arpa` et `player.visualy.home.arpa` vers l’IP LAN du serveur. À défaut, ajoutez les entrées aux fichiers hosts des postes qui le permettent. Les deux noms doivent être résolus par chaque écran.
 2. Démarrez la configuration HTTPS par défaut :
 
    ```sh
@@ -59,7 +67,7 @@ Le service ponctuel `migrate` met à niveau le schéma avant le démarrage de l�
    ```
 
 4. Installez ce certificat dans le magasin des autorités de confiance de chaque poste/écran et du navigateur lorsqu’il utilise son propre magasin. Sous Windows, utilisez le magasin « Autorités de certification racines de confiance ». Sous Linux, utilisez le mécanisme de votre distribution et vérifiez aussi le magasin Chromium/Firefox. Les bornes Android/TV doivent permettre l’installation d’une autorité approuvée ; qualifiez le matériel avant déploiement.
-5. Ouvrez `https://admin.scenzly.home.arpa` et `https://player.scenzly.home.arpa` sans avertissement de certificat. Les cookies de l’administration deviennent sécurisés. Le lecteur peut alors enregistrer son Service Worker et ses médias locaux. Un changement d’origine HTTP→HTTPS exige un nouveau jumelage sur le nouvel emplacement.
+5. Ouvrez `https://admin.visualy.home.arpa` et `https://player.visualy.home.arpa` sans avertissement de certificat. Les cookies de l’administration deviennent sécurisés. Le lecteur peut alors enregistrer son Service Worker et ses médias locaux. Un changement d’origine HTTP→HTTPS exige un nouveau jumelage sur le nouvel emplacement.
 
 Ignorer un avertissement de certificat ne constitue pas une configuration fiable pour le cache. Le cache reste soumis à l’espace disque et aux politiques du navigateur ; attendez la fin de la synchronisation puis testez une coupure réseau et un redémarrage sur chaque modèle d’écran. Les ressources externes ne sont pas garanties hors ligne.
 
@@ -117,7 +125,7 @@ HTTPS est inclus dans la configuration normale. Ne lancez pas `down -v`. Pour re
 
 ## Réseau isolé
 
-Sur une machine de préparation connectée, construisez les quatre images Screnzly (API, convertisseur, administration, lecteur) et récupérez l’image PostgreSQL et Caddy. Exportez-les avec `docker image save`, transférez l’archive et rechargez-la avec `docker image load` sur le serveur local. Conservez les mêmes noms d’images et démarrez avec `docker compose up -d --no-build --wait`. La synchronisation et les médias restent ensuite sur le LAN ; aucun compte externe n’est requis.
+Sur une machine de préparation connectée, construisez les quatre images Visualy (API, convertisseur, administration, lecteur) et récupérez l’image PostgreSQL et Caddy. Exportez-les avec `docker image save`, transférez l’archive et rechargez-la avec `docker image load` sur le serveur local. Conservez les mêmes noms d’images et démarrez avec `docker compose up -d --no-build --wait`. La synchronisation et les médias restent ensuite sur le LAN ; aucun compte externe n’est requis.
 
 ## Diagnostic
 
@@ -140,11 +148,11 @@ Les ports publics de Caddy sont configurables sans modifier les fichiers Compose
 BIND_ADDRESS=0.0.0.0
 CADDY_HTTP_PORT=8088
 CADDY_HTTPS_PORT=8443
-ADMIN_DOMAIN=admin.scenzly.home.arpa
-PLAYER_DOMAIN=player.scenzly.home.arpa
+ADMIN_DOMAIN=admin.visualy.home.arpa
+PLAYER_DOMAIN=player.visualy.home.arpa
 ```
 
-L’administration est alors accessible à `https://admin.scenzly.home.arpa:8443` et le lecteur à `https://player.scenzly.home.arpa:8443`. Les adresses HTTP sur le port 8088 redirigent vers HTTPS sur le port 8443, en conservant le chemin et les paramètres. Caddy écoute toujours sur 80/443 à l’intérieur du conteneur. Les deux interfaces partagent les ports publics et se distinguent par leur nom DNS. Les noms `ADMIN_DOMAIN` et `PLAYER_DOMAIN` ne doivent contenir ni `https://` ni port.
+L’administration est alors accessible à `https://admin.visualy.home.arpa:8443` et le lecteur à `https://player.visualy.home.arpa:8443`. Les adresses HTTP sur le port 8088 redirigent vers HTTPS sur le port 8443, en conservant le chemin et les paramètres. Caddy écoute toujours sur 80/443 à l’intérieur du conteneur. Les deux interfaces partagent les ports publics et se distinguent par leur nom DNS. Les noms `ADMIN_DOMAIN` et `PLAYER_DOMAIN` ne doivent contenir ni `https://` ni port.
 
 Choisir deux ports TCP libres, distincts, entre 1 et 65535, et autoriser ces ports dans le pare-feu LAN. Pour les ports standard, conserver `CADDY_HTTP_PORT=80` et `CADDY_HTTPS_PORT=443` ; le suffixe `:443` peut être omis dans les URL HTTPS.
 

@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { Transform } from 'node:stream';
 import { z } from 'zod';
-import { schedulesConflict, getScheduleErrors, type Schedule } from '@scenzly/shared';
+import { schedulesConflict, getScheduleErrors, type Schedule } from '@visualy/shared';
 import { pool, transaction } from './db.js';
 import { digest, secret, hashPassword, verifyPassword, sniffMime, parseRange } from './security.js';
 import { credentials, loginSchema, roleSchema, sceneSchema, programSchema, screenSchema, scheduleSchema, groupSchema, pairRequestSchema, pairConfirmSchema, commandSchema, boundedArray } from './validation.js';

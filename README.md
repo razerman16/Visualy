@@ -1,6 +1,8 @@
-# Screnzly
+# Visualy
 
 Plateforme d’affichage dynamique auto-hébergée pour un réseau local : une administration web, un lecteur plein écran par appareil, une API et PostgreSQL. Le logiciel fonctionne sans compte cloud ni service externe à l’exécution. Le téléchargement initial des images Docker et des dépendances nécessite Internet ; les images peuvent ensuite être transportées vers un serveur isolé.
+
+Screnzly devient **Visualy**. Pour une installation existante, conservez votre `.env` et vos volumes : voir [la mise à jour vers Visualy](docs/deployment.md#passage-de-screnzly-à-visualy).
 
 ## Démarrer sur votre serveur
 
@@ -19,7 +21,7 @@ Sous Windows, exécutez ces commandes depuis WSL ou Git Bash. Le script crée un
 
 Les ports publics se choisissent dans `.env` avec `CADDY_HTTP_PORT=80` et `CADDY_HTTPS_PORT=443`. Par exemple, `CADDY_HTTPS_PORT=8443` donne une adresse terminant par `:8443`. Voir [la configuration des ports](docs/deployment.md#choisir-les-ports-dans-env).
 
-Les noms par défaut sont `https://admin.scenzly.home.arpa` et `https://player.scenzly.home.arpa`. Faites-les pointer vers le serveur sur votre DNS local et approuvez l’autorité de certification Caddy sur chaque poste/lecteur. Voir [HTTPS local](docs/deployment.md#https-local-et-cache-hors-connexion).
+Les noms par défaut sont `https://admin.visualy.home.arpa` et `https://player.visualy.home.arpa`. Faites-les pointer vers le serveur sur votre DNS local et approuvez l’autorité de certification Caddy sur chaque poste/lecteur. Voir [HTTPS local](docs/deployment.md#https-local-et-cache-hors-connexion).
 
 L’installation du premier administrateur exige la **clé SETUP_TOKEN** stockée dans `.env`, à consulter localement sur le serveur. Elle n’est plus possible avec le seul accès réseau. Après création du premier compte, l’installation est fermée. PostgreSQL, l’API et le convertisseur ne publient aucun port sur l’hôte.
 
@@ -103,6 +105,6 @@ Les tests de conversion nécessitent FFmpeg/ffprobe et Poppler sur la machine qu
 
 ## Interface
 
-Identité visuelle aux couleurs de Screnzly, navigation adaptative, éditeur de scènes et écran de jumelage harmonisés. Logos et polices sont servis localement. Voir la [recette visuelle](docs/interface.md).
+Identité visuelle aux couleurs de Visualy, navigation adaptative, éditeur de scènes et écran de jumelage harmonisés. Logos et polices sont servis localement. Voir la [recette visuelle](docs/interface.md).
 
-![Tableau de bord Screnzly — données de démonstration](docs/screenshots/dashboard.png)
+![Tableau de bord Visualy — données de démonstration](docs/screenshots/dashboard.png)

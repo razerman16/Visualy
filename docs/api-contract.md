@@ -1,4 +1,4 @@
-# Contrat interne MVP Screnzly
+# Contrat interne MVP Visualy
 
 Toutes les routes sont sous `/api/v1`. JSON sauf upload multipart. Réponse erreurs `{error: string}`. Les listes renvoient directement un tableau. Les entités créées ou modifiées sont renvoyées directement. Dates ISO UTC. Identifiants UUID. URLs média toujours relatives `/api/v1/media/:id/file`.
 
@@ -19,7 +19,7 @@ Auth admin par cookie HttpOnly SameSite strict, fetch credentials same-origin. P
 
 Manifest `{revision:string,serverTime:string,screen:{id,name,orientation},fallbackProgramId:string|null,programs:PublishedProgram[],schedules:Schedule[],media:Media[]}`. PublishedProgram `{id,name,version:number,items:PlaylistItem[],scenes:Scene[],media:Media[]}`. Tous les fichiers du manifeste sont autorisés pour cet écran ; accès au catalogue interdit. Fallback intégré dans player si aucun programme. API peut déduire fallback du premier programme publié seulement si explicitement affecté ; aucun fallback automatique global.
 
-Module partagé `@scenzly/shared` exporte types et `selectProgram(schedules:Schedule[], now:Date, fallbackProgramId:string|null):string|null`, `isScheduleActive(schedule, now)`, `schedulesConflict(a,b)`. Résolution urgence > exception > dated > weekly, puis priorité numérique, puis id pour stabilité. Le player reçoit uniquement ses campagnes filtrées. Tests DST/overnight/exclusions requis.
+Module partagé `@visualy/shared` exporte types et `selectProgram(schedules:Schedule[], now:Date, fallbackProgramId:string|null):string|null`, `isScheduleActive(schedule, now)`, `schedulesConflict(a,b)`. Résolution urgence > exception > dated > weekly, puis priorité numérique, puis id pour stabilité. Le player reçoit uniquement ses campagnes filtrées. Tests DST/overnight/exclusions requis.
 
 ## Imports PDF
 `POST /imports/pdf` multipart `file` (éditeur/admin) retourne HTTP 202 `{id,name,status:"pending"}`. `GET /imports/pdf` (utilisateur authentifié) retourne les 100 derniers imports `{id,name,status,error,mediaIds,createdAt}`. États : pending/done/error. Les pages converties apparaissent dans `/media`. Limites : 25 Mo, 50 pages, sortie 1920 pixels maximum ; PDF protégés ou invalides rejetés par le traitement.

@@ -1,10 +1,10 @@
 import Preferences from './Preferences';
-import {initializePreferences,subscribePreferences,preferenceSnapshot} from '@scenzly/shared';
-import {t,translateMessage} from '@scenzly/shared';
+import {initializePreferences,subscribePreferences,preferenceSnapshot} from '@visualy/shared';
+import {t,translateMessage} from '@visualy/shared';
 import '@fontsource-variable/manrope/index.css';
 import React, { useCallback, useSyncExternalStore, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { selectProgram, type Manifest } from '@scenzly/shared';
+import { selectProgram, type Manifest } from '@visualy/shared';
 import { clearOffline, prepareManifest, storedManifest, type Prepared } from './offline';
 import { deviceId } from './playback';
 import { Fallback, Mark, Playback } from './render';
@@ -44,9 +44,9 @@ function Pairing({ paired, notice }: { paired: (token: string) => void; notice: 
     void poll(); const interval = setInterval(() => void poll(), 3000);
     return () => { controller.abort(); clearInterval(interval); };
   }, [id, paired]);
-  return <div className="pairing"><div className="pairing-top"><div className="brand"><img className="brand-logo" src="/brand/screnzly-logo.png" alt="Screnzly"/></div><div className="pairing-actions"><Preferences/><span className="pill"><span className="status-dot" />{" "}{t("Lecteur local")}</span></div></div>
+  return <div className="pairing"><div className="pairing-top"><div className="brand"><span className="brand-logo"><img className="brand-light" src="/brand/visualy-logo.png" alt="Visualy" width="2172" height="724"/><img className="brand-dark" src="/brand/visualy-logo-dark.png" alt="Visualy" width="2172" height="724"/></span></div><div className="pairing-actions"><Preferences/><span className="pill"><span className="status-dot" />{" "}{t("Lecteur local")}</span></div></div>
     <main className="pair-card"><div className="screen-icon"><svg viewBox="0 0 72 72" fill="none"><rect x="8" y="12" width="56" height="38" rx="5" stroke="currentColor" strokeWidth="3"/><path d="M25 61h22M36 51v10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><path d="m31 25 12 6-12 7V25Z" fill="currentColor"/></svg></div>
-      <span className="eyebrow">{t("CONNECTONS VOTRE ÉCRAN")}</span><h1>{t("Votre prochain message")}<br/><span>{t("commence ici.")}</span></h1><p>{t("Dans l’administration Screnzly, ouvrez")}{" "}<strong>{t("Écrans")}</strong>,<br/>{t("puis associez cet écran avec le code ci-dessous.")}</p>
+      <span className="eyebrow">{t("CONNECTONS VOTRE ÉCRAN")}</span><h1>{t("Votre prochain message")}<br/><span>{t("commence ici.")}</span></h1><p>{t("Dans l’administration Visualy, ouvrez")}{" "}<strong>{t("Écrans")}</strong>,<br/>{t("puis associez cet écran avec le code ci-dessous.")}</p>
       <div className="pair-code" aria-live="polite" aria-label={t("Code de jumelage")}>{pair?.code || '••• •••'}</div>
       <div className="waiting"><span className="pulse-dot" />{pair ? t("En attente de votre confirmation") : t("Connexion au serveur local…")}</div>
       {notice && <p className="notice" role="status">{translateMessage(notice)}</p>}{error && <p className="notice error" role="alert">{translateMessage(error)}</p>}
@@ -121,7 +121,7 @@ function App() {
   return <div className={`player ${showControls ? 'controls-visible' : ''}`} onPointerMove={() => setShowControls(true)} onClick={() => setShowControls(true)} onKeyDown={() => setShowControls(true)} tabIndex={-1}>
     {maintenance ? <Fallback title={t("Maintenance en cours")} message={t("La diffusion reprendra dès la fin de l’intervention.")} /> : program && prepared ? <Playback key={`${program.id}:${program.version}`} program={program} urls={prepared.urls} now={now} onItem={onItem} onError={onError} /> : <Fallback title={prepared ? undefined : t("Préparation de votre écran")} message={prepared ? undefined : t("Téléchargement et vérification de vos contenus…")} />}
     {(offline || status) && <div className="diagnostic" role="status"><span className={`status-dot ${offline ? 'amber' : ''}`} />{offline ? t("Hors connexion · {0}", prepared ? t("dernière programmation conservée") : status) : translateMessage(status)}</div>}
-    {showControls && <div className="player-toolbar"><Preferences/><span>{prepared?.manifest.screen.name || 'Screnzly'}</span><button onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => setStatus(t("Activez le mode plein écran du navigateur (F11)."))); else void document.exitFullscreen(); }}>{t("Plein écran")}</button></div>}
+    {showControls && <div className="player-toolbar"><Preferences/><span>{prepared?.manifest.screen.name || 'Visualy'}</span><button onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => setStatus(t("Activez le mode plein écran du navigateur (F11)."))); else void document.exitFullscreen(); }}>{t("Plein écran")}</button></div>}
   </div>;
 }
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: string }> {

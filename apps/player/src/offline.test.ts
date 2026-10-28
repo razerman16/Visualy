@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { hashBytes, verifyAsset, mediaUrl, prepareManifest, storedManifest, clearOffline } from './offline';
-import type { Manifest, Media } from '@scenzly/shared';
+import type { Manifest, Media } from '@visualy/shared';
 
 const data = new TextEncoder().encode('verified media content').buffer;
 const checksum = createHash('sha256').update(new Uint8Array(data)).digest('hex');

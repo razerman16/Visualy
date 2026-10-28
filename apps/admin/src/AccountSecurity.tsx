@@ -1,5 +1,5 @@
 import {useEffect,useState,type FormEvent} from 'react';
-import {t,translateMessage} from '@scenzly/shared';
+import {t,translateMessage} from '@visualy/shared';
 import {api,date,type User} from './api';
 export default function AccountSecurity({user,onLogout}:{user:User;onLogout:()=>void}){
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[users,setUsers]=useState<User[]>([]),[events,setEvents]=useState<Array<{id:string;type:string;createdAt:string}>>([]);

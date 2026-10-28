@@ -1,6 +1,6 @@
-import {t,translateMessage} from '@scenzly/shared';
+import {t,translateMessage} from '@visualy/shared';
 import { sha256 } from '@noble/hashes/sha2.js';
-import type { Manifest, Media } from '@scenzly/shared';
+import type { Manifest, Media } from '@visualy/shared';
 
 export const CACHE_PREFIX = 'scenzly-media-';
 const MANIFEST_KEY = 'scenzly-manifest';
