@@ -1,5 +1,6 @@
 {
     local_certs
+    auto_https disable_redirects
     admin off
 }
 {$ADMIN_DOMAIN} {
@@ -15,4 +16,13 @@
     reverse_proxy player-web:80 {
         header_up X-Real-IP {remote_host}
     }
+}
+
+# Docker publishes port 80 on CADDY_HTTP_PORT. Redirect to the public HTTPS
+# port, not the container's internal 443; keep paths and query strings.
+http://{$ADMIN_DOMAIN} {
+    redir https://{$ADMIN_DOMAIN}:{$CADDY_HTTPS_PORT:443}{uri} permanent
+}
+http://{$PLAYER_DOMAIN} {
+    redir https://{$PLAYER_DOMAIN}:{$CADDY_HTTPS_PORT:443}{uri} permanent
 }

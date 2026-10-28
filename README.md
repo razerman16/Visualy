@@ -17,6 +17,8 @@ docker compose ps
 
 Sous Windows, exécutez ces commandes depuis WSL ou Git Bash. Le script crée un fichier `.env` local avec un mot de passe PostgreSQL aléatoire ; il préserve un fichier existant. Ne commitez pas ce fichier.
 
+Les ports publics se choisissent dans `.env` avec `CADDY_HTTP_PORT=80` et `CADDY_HTTPS_PORT=443`. Par exemple, `CADDY_HTTPS_PORT=8443` donne une adresse terminant par `:8443`. Voir [la configuration des ports](docs/deployment.md#choisir-les-ports-dans-env).
+
 Les noms par défaut sont `https://admin.scenzly.home.arpa` et `https://player.scenzly.home.arpa`. Faites-les pointer vers le serveur sur votre DNS local et approuvez l’autorité de certification Caddy sur chaque poste/lecteur. Voir [HTTPS local](docs/deployment.md#https-local-et-cache-hors-connexion).
 
 L’installation du premier administrateur exige la **clé SETUP_TOKEN** stockée dans `.env`, à consulter localement sur le serveur. Elle n’est plus possible avec le seul accès réseau. Après création du premier compte, l’installation est fermée. PostgreSQL, l’API et le convertisseur ne publient aucun port sur l’hôte.

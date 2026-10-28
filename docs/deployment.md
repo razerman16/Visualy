@@ -21,6 +21,9 @@ Le script `sh scripts/init-env.sh` génère `.env` sans afficher son secret. Var
 | Variable | Valeur initiale | Utilisation |
 | --- | --- | --- |
 | `POSTGRES_PASSWORD` | aléatoire, 64 caractères hexadécimaux | Compte PostgreSQL interne |
+| `CADDY_HTTP_PORT` | `80` | Port HTTP public et redirection HTTPS |
+| `CADDY_HTTPS_PORT` | `443` | Port HTTPS public de Caddy |
+| `DEV_ADMIN_PORT` / `DEV_PLAYER_PORT` | `8080` / `8081` | Ports locaux avec `compose.dev.yaml` uniquement |
 | `BIND_ADDRESS` | `0.0.0.0` | Adresse d’écoute des ports publiés ; choisir l’IP LAN pour restreindre l’interface |
 | `APP_DB_PASSWORD` | aléatoire, 64 caractères hexadécimaux | Compte applicatif à droits limités |
 | `SETUP_TOKEN` | aléatoire | Clé de création du premier compte |
@@ -128,3 +131,36 @@ Sur une machine de préparation connectée, construisez les quatre images Screnz
 Ne publiez pas les journaux complets ou les sauvegardes : ils peuvent contenir des données internes. Les journaux nginx omettent volontairement la chaîne de requête, qui peut transporter un jeton de lecteur.
 
 Pour migrer une installation PostgreSQL 17, suivre la section PostgreSQL 18 du README avant tout redémarrage avec le nouveau fichier Compose. Le volume 17 ne doit jamais être monté directement dans PostgreSQL 18.
+
+## Choisir les ports dans `.env`
+
+Les ports publics de Caddy sont configurables sans modifier les fichiers Compose :
+
+```dotenv
+BIND_ADDRESS=0.0.0.0
+CADDY_HTTP_PORT=8088
+CADDY_HTTPS_PORT=8443
+ADMIN_DOMAIN=admin.scenzly.home.arpa
+PLAYER_DOMAIN=player.scenzly.home.arpa
+```
+
+L’administration est alors accessible à `https://admin.scenzly.home.arpa:8443` et le lecteur à `https://player.scenzly.home.arpa:8443`. Les adresses HTTP sur le port 8088 redirigent vers HTTPS sur le port 8443, en conservant le chemin et les paramètres. Caddy écoute toujours sur 80/443 à l’intérieur du conteneur. Les deux interfaces partagent les ports publics et se distinguent par leur nom DNS. Les noms `ADMIN_DOMAIN` et `PLAYER_DOMAIN` ne doivent contenir ni `https://` ni port.
+
+Choisir deux ports TCP libres, distincts, entre 1 et 65535, et autoriser ces ports dans le pare-feu LAN. Pour les ports standard, conserver `CADDY_HTTP_PORT=80` et `CADDY_HTTPS_PORT=443` ; le suffixe `:443` peut être omis dans les URL HTTPS.
+
+Après modification :
+
+```sh
+docker compose config --quiet
+docker compose up -d --no-deps caddy
+```
+
+Un simple `docker compose restart caddy` ne recharge pas les publications de ports ni les variables d’environnement. Si le code ou les images ont également changé, suivre la procédure complète de mise à jour. Utiliser directement la nouvelle URL HTTPS ; un changement de port HTTPS change l’origine du navigateur et peut demander une reconnexion et un nouveau jumelage. Une politique HSTS déjà mémorisée peut également forcer HTTPS sur une ancienne adresse HTTP.
+
+Pour le mode de développement local, `DEV_ADMIN_PORT` (8080 par défaut) et `DEV_PLAYER_PORT` (8081) configurent les ports HTTP uniquement avec `compose.dev.yaml`. Ils restent liés à `127.0.0.1`. Les ports internes API/PostgreSQL/convertisseur restent privés.
+
+### Préparer les secrets
+
+Exécuter `sh scripts/init-env.sh` sur le serveur : les secrets manquants sont générés et les réglages réseau manquants sont ajoutés, sans remplacer les valeurs existantes. Si le journal affiche `Converter token required`, vérifier que `CONVERTER_TOKEN` contient le secret généré (au moins 32 caractères). Pour `APP_DB_PASSWORD must contain 64 hexadecimal characters`, la valeur `APP_DB_PASSWORD` doit contenir exactement 64 caractères parmi `0-9` et `a-f`.
+
+Une valeur déjà renseignée mais invalide est conservée par le script. Pour la régénérer, sauvegarder `.env`, retirer uniquement la ligne invalide `APP_DB_PASSWORD` ou `CONVERTER_TOKEN`, puis relancer `sh scripts/init-env.sh` et `docker compose up -d --wait`. Le service de migration applique le nouveau mot de passe applicatif et les services API/convertisseur reprennent leur secret commun. Ne pas supprimer ni remplacer `POSTGRES_PASSWORD` d’une base existante par cette méthode.

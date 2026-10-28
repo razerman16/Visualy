@@ -1,7 +1,9 @@
 # Disposable integration installation, separate project and volumes.
 services:
   caddy:
-    ports: !override ["127.0.0.1:18443:443", "127.0.0.1:18080:80"]
+    ports: !override ["127.0.0.1:${CADDY_HTTPS_PORT:-18443}:443", "127.0.0.1:${CADDY_HTTP_PORT:-18080}:80"]
+    environment:
+      CADDY_HTTPS_PORT: ${CADDY_HTTPS_PORT:-18443}
   admin-web:
     image: scenzly-admin-web:latest
     ports: ["127.0.0.1:18380:80"]
