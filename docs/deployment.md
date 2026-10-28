@@ -198,3 +198,39 @@ Installer `visualy-root.crt` comme autorité racine de confiance dans le systèm
 Le navigateur doit être sur la machine Docker : depuis un autre poste, localhost désigne cet autre poste. Pour des écrans sur le réseau, utiliser le mode par domaines documenté plus haut.
 
 Les données et secrets restent dans les mêmes volumes. Chaque port HTTPS définit une origine distincte : administration et lecteur ont chacun leur cache et leurs préférences. Un passage depuis les anciens domaines exige une nouvelle connexion et un nouveau jumelage sur localhost. Pour revenir au mode réseau, retirer les deux lignes `COMPOSE_*` et relancer `docker compose up -d --wait` ; les domaines existants du `.env` seront repris.
+
+## Accéder directement par l’IP du serveur
+
+Ce mode utilise **l’adresse IPv4 déjà attribuée au serveur**. Il ne modifie pas la configuration réseau de la machine. Caddy publie l’administration et le lecteur sur deux ports HTTPS distincts ; les noms DNS configurés restent aussi accessibles sur le port HTTPS principal.
+
+Sur le serveur Docker, activer le mode une seule fois :
+
+```sh
+sh scripts/init-env.sh --ip
+```
+
+Le script détecte l’adresse source de la route IPv4 par défaut, sans envoyer de requête réseau, puis inscrit `SERVER_IP` et la sélection `compose.yaml|compose.ip.yaml` dans `.env`. Il préserve les secrets, les domaines et les ports existants. Il remplace la sélection du mode localhost si elle était active. Docker Compose 2.24.4 minimum est nécessaire.
+
+Choisir les ports dans `.env`, par exemple :
+
+```dotenv
+CADDY_HTTP_PORT=80
+CADDY_HTTPS_PORT=443
+CADDY_PLAYER_HTTPS_PORT=8443
+```
+
+Puis appliquer :
+
+```sh
+docker compose config --quiet
+docker compose up -d --build --wait
+docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./visualy-root.crt
+```
+
+Si l’IP affichée par le script est `192.168.1.50`, ouvrir **https://192.168.1.50** pour l’administration et **https://192.168.1.50:8443** pour le lecteur. Installer le certificat racine Caddy sur chaque poste/écran pour que le navigateur valide HTTPS et permette le cache hors connexion. Aucun fichier hosts ou DNS n’est nécessaire pour ces adresses.
+
+`BIND_ADDRESS=0.0.0.0` publie les ports sur les interfaces IPv4 du serveur ; `SERVER_IP` sert à identifier son adresse dans le certificat, sans attribuer une nouvelle IP. `CADDY_IP` et `FRONTEND_SUBNET` concernent uniquement le réseau interne Docker. Les trois ports publics doivent être libres et distincts.
+
+La détection fonctionne sur Linux (`ip`) et macOS (`route`/`ipconfig`). Vérifier l’adresse affichée si le serveur a plusieurs interfaces, un VPN, ou tourne dans WSL/une VM : dans ces cas, renseigner au besoin `SERVER_IP` avec l’adresse LAN existante réellement utilisée par les clients. Si la détection échoue, le script s’arrête avant d’activer ce mode. Une valeur `SERVER_IP` déjà définie est conservée. Après un changement d’adresse du serveur, mettre cette valeur à jour et recréer Caddy avec `docker compose up -d --no-deps caddy`.
+
+Pour ajouter des noms propres ensuite, définir `ADMIN_DOMAIN` et `PLAYER_DOMAIN` dans `.env`, créer leurs entrées DNS vers l’IP du serveur et recréer Caddy. Les deux noms utilisent `CADDY_HTTPS_PORT`, tandis que l’accès direct du lecteur par IP utilise `CADDY_PLAYER_HTTPS_PORT`. Le passage IP → DNS change l’origine navigateur : prévoir une nouvelle connexion et un jumelage sur la nouvelle adresse. Conserver le mode IP permet les deux accès en parallèle.

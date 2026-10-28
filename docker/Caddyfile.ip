@@ -1,0 +1,30 @@
+{
+    local_certs
+    auto_https disable_redirects
+    admin off
+    # Browsers accessing a literal IP may omit TLS SNI.
+    default_sni {$SERVER_IP}
+}
+https://{$SERVER_IP}:443, https://{$ADMIN_DOMAIN}:443 {
+    tls internal
+    header Strict-Transport-Security "max-age=31536000"
+    reverse_proxy admin-web:80 {
+        header_up X-Real-IP {remote_host}
+    }
+}
+https://{$SERVER_IP}:8443, https://{$PLAYER_DOMAIN}:443 {
+    tls internal
+    header Strict-Transport-Security "max-age=31536000"
+    reverse_proxy player-web:80 {
+        header_up X-Real-IP {remote_host}
+    }
+}
+http://{$SERVER_IP} {
+    redir https://{$SERVER_IP}:{$CADDY_HTTPS_PORT:443}{uri} permanent
+}
+http://{$ADMIN_DOMAIN} {
+    redir https://{$ADMIN_DOMAIN}:{$CADDY_HTTPS_PORT:443}{uri} permanent
+}
+http://{$PLAYER_DOMAIN} {
+    redir https://{$PLAYER_DOMAIN}:{$CADDY_HTTPS_PORT:443}{uri} permanent
+}

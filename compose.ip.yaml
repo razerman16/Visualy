@@ -1,0 +1,13 @@
+# Direct HTTPS through the server's existing IPv4 address; DNS names also work.
+# Enable with: sh scripts/init-env.sh --ip
+# Requires Docker Compose >= 2.24.4.
+services:
+  caddy:
+    ports: !override
+      - "${BIND_ADDRESS:-0.0.0.0}:${CADDY_HTTP_PORT:-80}:80"
+      - "${BIND_ADDRESS:-0.0.0.0}:${CADDY_HTTPS_PORT:-443}:443"
+      - "${BIND_ADDRESS:-0.0.0.0}:${CADDY_PLAYER_HTTPS_PORT:-8443}:8443"
+    environment:
+      SERVER_IP: ${SERVER_IP:?Executez sh scripts/init-env.sh --ip sur le serveur Docker}
+    volumes:
+      - ./docker/Caddyfile.ip:/etc/caddy/Caddyfile:ro

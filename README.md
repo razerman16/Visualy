@@ -4,6 +4,8 @@ Plateforme d’affichage dynamique auto-hébergée pour un réseau local : une a
 
 Screnzly devient **Visualy**. Pour une installation existante, conservez votre `.env` et vos volumes : voir [la mise à jour vers Visualy](docs/deployment.md#passage-de-screnzly-à-visualy).
 
+Pour accéder directement par **l’IP existante du serveur**, lancez `sh scripts/init-env.sh --ip`, choisissez les ports Caddy dans `.env`, puis démarrez Compose. Voir [le mode IP](docs/deployment.md#accéder-directement-par-lip-du-serveur).
+
 Pour tester sur la machine Docker sans configurer de nom de domaine, utilisez le [mode HTTPS localhost](docs/deployment.md#tester-en-https-sur-localhost).
 
 ## Démarrer sur votre serveur
