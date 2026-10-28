@@ -4,6 +4,8 @@ Plateforme d’affichage dynamique auto-hébergée pour un réseau local : une a
 
 Screnzly devient **Visualy**. Pour une installation existante, conservez votre `.env` et vos volumes : voir [la mise à jour vers Visualy](docs/deployment.md#passage-de-screnzly-à-visualy).
 
+Pour tester sur la machine Docker sans configurer de nom de domaine, utilisez le [mode HTTPS localhost](docs/deployment.md#tester-en-https-sur-localhost).
+
 ## Démarrer sur votre serveur
 
 Prérequis : Docker Engine avec Docker Compose v2, ou Docker Desktop avec les conteneurs Linux sous Windows/macOS. Point de départ conseillé : 4 cœurs, 6 Go de RAM et de l’espace disque adapté aux médias. Les performances vidéo dépendent aussi de chaque lecteur.

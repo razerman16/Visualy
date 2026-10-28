@@ -1,0 +1,22 @@
+{
+    local_certs
+    auto_https disable_redirects
+    admin off
+}
+https://localhost:443 {
+    tls internal
+    header Strict-Transport-Security "max-age=31536000"
+    reverse_proxy admin-web:80 {
+        header_up X-Real-IP {remote_host}
+    }
+}
+https://localhost:8443 {
+    tls internal
+    header Strict-Transport-Security "max-age=31536000"
+    reverse_proxy player-web:80 {
+        header_up X-Real-IP {remote_host}
+    }
+}
+http://localhost {
+    redir https://localhost:{$CADDY_HTTPS_PORT:443}{uri} permanent
+}

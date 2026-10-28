@@ -172,3 +172,29 @@ Pour le mode de développement local, `DEV_ADMIN_PORT` (8080 par défaut) et `DE
 Exécuter `sh scripts/init-env.sh` sur le serveur : les secrets manquants sont générés et les réglages réseau manquants sont ajoutés, sans remplacer les valeurs existantes. Si le journal affiche `Converter token required`, vérifier que `CONVERTER_TOKEN` contient le secret généré (au moins 32 caractères). Pour `APP_DB_PASSWORD must contain 64 hexadecimal characters`, la valeur `APP_DB_PASSWORD` doit contenir exactement 64 caractères parmi `0-9` et `a-f`.
 
 Une valeur déjà renseignée mais invalide est conservée par le script. Pour la régénérer, sauvegarder `.env`, retirer uniquement la ligne invalide `APP_DB_PASSWORD` ou `CONVERTER_TOKEN`, puis relancer `sh scripts/init-env.sh` et `docker compose up -d --wait`. Le service de migration applique le nouveau mot de passe applicatif et les services API/convertisseur reprennent leur secret commun. Ne pas supprimer ni remplacer `POSTGRES_PASSWORD` d’une base existante par cette méthode.
+
+## Tester en HTTPS sur localhost
+
+Avec Docker Compose **2.24.4 ou plus récent**, ajouter ces lignes dans `.env` :
+
+```dotenv
+COMPOSE_PATH_SEPARATOR=|
+COMPOSE_FILE=compose.yaml|compose.localhost.yaml
+CADDY_HTTP_PORT=80
+CADDY_HTTPS_PORT=443
+LOCAL_PLAYER_HTTPS_PORT=8443
+```
+
+Le séparateur explicite `|` rend cette sélection compatible avec Linux, macOS et Windows. Ne pas combiner ce mode avec `compose.dev.yaml`. Les ports doivent être libres et distincts. `ADMIN_DOMAIN`, `PLAYER_DOMAIN` et `BIND_ADDRESS` ne sont pas utilisés par ce mode : les ports sont publiés uniquement sur `127.0.0.1`.
+
+```sh
+docker compose config --quiet
+docker compose up -d --build --wait
+docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./visualy-root.crt
+```
+
+Installer `visualy-root.crt` comme autorité racine de confiance dans le système/navigateur, puis ouvrir **https://localhost** pour l’administration et **https://localhost:8443** pour le lecteur. Aucun DNS ni fichier hosts à modifier. `http://localhost` redirige vers le port HTTPS de l’administration ; si vous changez les ports, les indiquer dans les URL. Le certificat local reste nécessaire, même sur localhost. Ne pas distribuer la clé privée de Caddy.
+
+Le navigateur doit être sur la machine Docker : depuis un autre poste, localhost désigne cet autre poste. Pour des écrans sur le réseau, utiliser le mode par domaines documenté plus haut.
+
+Les données et secrets restent dans les mêmes volumes. Chaque port HTTPS définit une origine distincte : administration et lecteur ont chacun leur cache et leurs préférences. Un passage depuis les anciens domaines exige une nouvelle connexion et un nouveau jumelage sur localhost. Pour revenir au mode réseau, retirer les deux lignes `COMPOSE_*` et relancer `docker compose up -d --wait` ; les domaines existants du `.env` seront repris.
