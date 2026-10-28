@@ -1,3 +1,4 @@
+import {legacyIdentity,sessionToken} from '@visualy/shared';
 import {accountLogins,userRequests,deviceRequests,deviceEvents,deviceEventBytes,identityKey} from './limits.js';
 import {registerUploadGuard} from './upload-guard.js';
 import { registerVideoImports } from './video-imports.js';
@@ -36,7 +37,7 @@ const mediaView=(row:any)=>({id:row.id,name:row.name,mime:row.mime,size:Number(r
 const programView=(row:any)=>({id:row.id,name:row.name,items:row.items,publishedVersion:row.published_version,createdAt:row.created_at});
 const screenView=(row:any)=>({id:row.id,name:row.name,groupId:row.group_id,orientation:row.orientation,fallbackProgramId:row.fallback_program_id,lastSeen:row.last_seen,currentProgramId:row.current_program_id,online:row.last_seen ? Date.now()-new Date(row.last_seen).getTime()<90000:false});
 async function audit(req:FastifyRequest,type:string,data:object={}) {await pool.query('INSERT INTO security_events(actor_id,type,data) VALUES($1,$2,$3)',[req.user?.id||null,type,JSON.stringify({...data,ip:req.ip})]);}
-async function session(reply:FastifyReply,id:string,passwordHash?:string) {const token=secret();await transaction(async c=>{const row=(await c.query("SELECT password,disabled FROM users WHERE id=$1 FOR UPDATE",[id])).rows[0];if(!row||row.disabled||passwordHash&&row.password!==passwordHash)fail(401,"Connexion requise");await c.query("INSERT INTO sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[digest(token),id]);});reply.setCookie('scenzly_session',token,{path:'/',httpOnly:true,sameSite:'strict',secure:process.env.COOKIE_SECURE!=='false',maxAge:604800});}
+async function session(reply:FastifyReply,id:string,passwordHash?:string) {const token=secret();await transaction(async c=>{const row=(await c.query("SELECT password,disabled FROM users WHERE id=$1 FOR UPDATE",[id])).rows[0];if(!row||row.disabled||passwordHash&&row.password!==passwordHash)fail(401,"Connexion requise");await c.query("INSERT INTO sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[digest(token),id]);});reply.setCookie('visualy_session',token,{path:'/',httpOnly:true,sameSite:'strict',secure:process.env.COOKIE_SECURE!=='false',maxAge:604800});}
 async function device(req:FastifyRequest,allowQuery=false):Promise<any> {const bearer=req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];const token=bearer||(allowQuery?(req.query as any).token:undefined);if(typeof token!=='string'||token.length>200)fail(401,'Jeton appareil requis');const {rows}=await pool.query('SELECT * FROM screens WHERE token_hash=$1',[digest(token)]);if(!rows[0])fail(401,'Appareil révoqué ou inconnu');deviceRequests.take(rows[0].id);return rows[0];}
 async function manifest(screen:any) {
   const schedules=(await pool.query("SELECT data FROM schedules WHERE data->>'screenId'=$1 OR ($2::text IS NOT NULL AND data->>'groupId'=$2)",[screen.id,screen.group_id])).rows.map(r=>r.data);
@@ -56,7 +57,7 @@ api.addHook('preHandler',async(req)=>{
     let originHost='';try{originHost=new URL(req.headers.origin).host}catch{}
     if(originHost!==host)fail(403,'Origine de la requête interdite');
   }
-  const token=req.cookies.scenzly_session;
+  const token=sessionToken(req.cookies);
   if(token){const {rows}=await pool.query('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=$1 AND s.expires_at>now() AND NOT u.disabled',[digest(token)]);if(rows[0]){req.user=publicUser(rows[0]);userRequests.take(req.user.id);}}
 });
 registerUploadGuard(api,mediaDir,req=>user(req,EDIT).id);
@@ -80,7 +81,7 @@ api.post(`${base}/auth/setup`,{config:{rateLimit:{max:5,timeWindow:'1 minute'}}}
 });
 api.post(`${base}/auth/login`,{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async(req,reply)=>{const body=loginSchema.parse(req.body);accountLogins.take(identityKey(body.email));const row=(await pool.query('SELECT * FROM users WHERE email=$1',[body.email])).rows[0];if(!row||row.disabled||!await verifyPassword(body.password,row.password)){await audit(req,'auth.login_failed',{account:identityKey(body.email)});fail(401,'Adresse ou mot de passe incorrect');}await audit(req,'auth.login',{id:row.id});await session(reply,row.id,row.password);return publicUser(row);});
 api.get(`${base}/auth/me`,async(req)=>user(req));
-api.post(`${base}/auth/logout`,async(req,reply)=>{if(req.cookies.scenzly_session)await pool.query('DELETE FROM sessions WHERE hash=$1',[digest(req.cookies.scenzly_session)]);await audit(req,'auth.logout');reply.clearCookie('scenzly_session',{path:'/'});return {ok:true};});
+api.post(`${base}/auth/logout`,async(req,reply)=>{const token=sessionToken(req.cookies);if(token)await pool.query('DELETE FROM sessions WHERE hash=$1',[digest(token)]);await audit(req,'auth.logout');reply.clearCookie('visualy_session',{path:'/'});reply.clearCookie(legacyIdentity.sessionCookie,{path:'/'});return {ok:true};});
 api.get(`${base}/users`,async(req)=>{user(req,['superadmin']);return (await pool.query('SELECT id,email,name,role,disabled FROM users ORDER BY name')).rows;});
 api.post(`${base}/users`,async(req,reply)=>{user(req,['superadmin']);const b=credentials.extend({role:roleSchema}).parse(req.body);const id=randomUUID();await pool.query('INSERT INTO users(id,email,name,role,password) VALUES($1,$2,$3,$4,$5)',[id,b.email,b.name,b.role,await hashPassword(b.password)]);await audit(req,'user.created',{id});reply.code(201);return {id,email:b.email,name:b.name,role:b.role};});
 api.patch(`${base}/users/:id`,async(req)=>{
@@ -97,7 +98,7 @@ api.post(`${base}/auth/password`,{config:{rateLimit:{max:5,timeWindow:'1 minute'
  const actor=user(req);const b=z.object({currentPassword:z.string().max(128),password:credentials.shape.password}).parse(req.body);
  await transaction(async c=>{const row=(await c.query('SELECT password FROM users WHERE id=$1 FOR UPDATE',[actor.id])).rows[0];if(!await verifyPassword(b.currentPassword,row.password))fail(403,'Mot de passe actuel incorrect');
  await c.query('UPDATE users SET password=$2 WHERE id=$1',[actor.id,await hashPassword(b.password)]);await c.query('DELETE FROM sessions WHERE user_id=$1',[actor.id]);await c.query('INSERT INTO security_events(actor_id,type) VALUES($1,$2)',[actor.id,'user.password_changed']);});
- reply.clearCookie('scenzly_session',{path:'/'});return {ok:true};
+ reply.clearCookie('visualy_session',{path:'/'});reply.clearCookie(legacyIdentity.sessionCookie,{path:'/'});return {ok:true};
 });
 api.post(`${base}/users/:id/password`,{config:{rateLimit:{max:5,timeWindow:'1 minute'}}},async req=>{
  const actor=user(req,['superadmin']),id=uid(req),b=z.object({currentPassword:z.string().max(128),password:credentials.shape.password}).parse(req.body);

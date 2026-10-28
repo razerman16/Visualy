@@ -2,9 +2,9 @@ import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {fixtures} from './fixtures.mjs';
-const admin=process.env.SCENZLY_ADMIN_URL||'http://127.0.0.1:8280',player=process.env.SCENZLY_PLAYER_URL||'http://127.0.0.1:8281';
-const output=process.env.SCENZLY_SCREENSHOTS||'/tmp/screnzly-preferences';await mkdir(output,{recursive:true});
-const browser=await chromium.launch({executablePath:process.env.SCENZLY_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});const errors=[];
+const admin=process.env.VISUALY_ADMIN_URL||'http://127.0.0.1:8280',player=process.env.VISUALY_PLAYER_URL||'http://127.0.0.1:8281';
+const output=process.env.VISUALY_SCREENSHOTS||'/tmp/visualy-preferences';await mkdir(output,{recursive:true});
+const browser=await chromium.launch({executablePath:process.env.VISUALY_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});const errors=[];
 async function mock(page,auth=true){page.on('pageerror',e=>errors.push(e.message));await page.route('**/api/v1/**',r=>{const path=new URL(r.request().url()).pathname.replace('/api/v1','');return r.fulfill({status:path==='/auth/me'&&!auth?401:200,contentType:'application/json',body:JSON.stringify(path==='/auth/me'&&!auth?{error:'Connexion requise'}:fixtures[path]||{})})})}
 async function fits(page){assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'No horizontal page overflow')}
 try{

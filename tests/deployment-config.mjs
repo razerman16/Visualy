@@ -1,10 +1,11 @@
 // No containers or real .env values are used: check the effective network/cookie boundary.
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,writeFileSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+const legacyProject=readFileSync('scripts/legacy-identifiers.sh','utf8').match(/^LEGACY_PROJECT=(.+)$/m)[1];
 const root=fileURLToPath(new URL('../',import.meta.url));
 const dir=mkdtempSync(join(tmpdir(),'visualy-config-'));
 const fixture=join(dir,'env');
@@ -29,7 +30,7 @@ try{
   assert.ok(mount.source.endsWith(mode==='https'?'/docker/Caddyfile':`/docker/Caddyfile.${mode}`));
  }
  const dev=config('dev');assert.equal(dev.services.caddy,undefined);assert.deepEqual(ports(dev.services['admin-web']),['127.0.0.1:18084:80']);assert.deepEqual(ports(dev.services['player-web']),['127.0.0.1:18085:80']);
- const migrated=JSON.parse(execFileSync('docker',['compose','--env-file',fixture,'-f','compose.yaml','config','--format','json'],{cwd:root,env:{...process.env,...values,VOLUME_PREFIX:'scenzly'},encoding:'utf8'}));
- assert.equal(migrated.name,'visualy');assert.equal(migrated.volumes['postgres18-data'].name,'scenzly_postgres18-data');assert.equal(migrated.volumes['media-data'].name,'scenzly_media-data');
+ const migrated=JSON.parse(execFileSync('docker',['compose','--env-file',fixture,'-f','compose.yaml','config','--format','json'],{cwd:root,env:{...process.env,...values,VOLUME_PREFIX:legacyProject},encoding:'utf8'}));
+ assert.equal(migrated.name,'visualy');assert.equal(migrated.volumes['postgres18-data'].name,`${legacyProject}_postgres18-data`);assert.equal(migrated.volumes['media-data'].name,`${legacyProject}_media-data`);
  console.log('PASS: HTTP default without Caddy; custom ports; HTTPS cookies and no HTTP bypass in all three modes; internal services and volumes preserved; localhost development binding.');
 }finally{rmSync(dir,{recursive:true,force:true});}

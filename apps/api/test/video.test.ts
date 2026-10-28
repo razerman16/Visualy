@@ -8,7 +8,7 @@ import {promisify} from 'node:util';
 import {transcodeVideo,isVideoContainer} from '../src/video-imports.js';
 const exec=promisify(execFile);
 test('AVI MPEG4 + PCM becomes H264/AAC fast-start MP4 and video-only inputs work',async()=>{
- const dir=await mkdtemp(join(tmpdir(),'screnzly-video-'));
+ const dir=await mkdtemp(join(tmpdir(),'visualy-video-'));
  try{
   const source=join(dir,'source.avi'),output=join(dir,'output.mp4');
   await exec('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=160x120:r=10','-f','lavfi','-i','sine=frequency=440:sample_rate=44100','-t','1','-c:v','mpeg4','-c:a','pcm_s16le',source]);

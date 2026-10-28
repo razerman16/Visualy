@@ -20,12 +20,12 @@ API_URL=http://127.0.0.1:8080 npm run preview -w @visualy/player -- --host 127.0
 Puis exécuter, avec Chromium installé :
 
 ```sh
-SCENZLY_ADMIN_URL=http://127.0.0.1:8280 SCENZLY_PLAYER_URL=http://127.0.0.1:8281 node tests/ui/visual-check.mjs
+VISUALY_ADMIN_URL=http://127.0.0.1:8280 VISUALY_PLAYER_URL=http://127.0.0.1:8281 node tests/ui/visual-check.mjs
 node tests/ui/preferences.mjs
 node tests/ui/offline-shell.mjs
 ```
 
-`SCENZLY_CHROMIUM` permet de choisir le binaire du navigateur. Les captures sont enregistrées dans `/tmp/screnzly-design`, ou le répertoire `SCENZLY_SCREENSHOTS`. La recette vérifie la navigation, les formulaires de jumelage, l’éditeur, les versions mobiles, les erreurs JavaScript et les débordements horizontaux. Le test hors connexion vérifie le cache de la page du lecteur, du logo et des polices ; il ne remplace pas les tests de diffusion des médias.
+`VISUALY_CHROMIUM` permet de choisir le binaire du navigateur. Les captures sont enregistrées dans `/tmp/visualy-design`, ou le répertoire `VISUALY_SCREENSHOTS`. La recette vérifie la navigation, les formulaires de jumelage, l’éditeur, les versions mobiles, les erreurs JavaScript et les débordements horizontaux. Le test hors connexion vérifie le cache de la page du lecteur, du logo et des polices ; il ne remplace pas les tests de diffusion des médias.
 
 ## Validation du passage à Visualy
 

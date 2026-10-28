@@ -4,7 +4,7 @@ import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,copyFileSync,rmSync,sta
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
-function fixture(fn){const root=mkdtempSync(join(tmpdir(),'visualy-scripts-'));mkdirSync(join(root,'scripts'));mkdirSync(join(root,'bin'));try{return fn(root)}finally{rmSync(root,{recursive:true,force:true})}}
+function fixture(fn){const root=mkdtempSync(join(tmpdir(),'visualy-scripts-'));mkdirSync(join(root,'scripts'));mkdirSync(join(root,'bin'));copyFileSync('scripts/legacy-identifiers.sh',join(root,'scripts/legacy-identifiers.sh'));try{return fn(root)}finally{rmSync(root,{recursive:true,force:true})}}
 function vars(root){return Object.fromEntries(readFileSync(join(root,'.env'),'utf8').split('\n').filter(l=>l.includes('=')&&!l.startsWith('#')).map(l=>[l.slice(0,l.indexOf('=')),l.slice(l.indexOf('=')+1)]))}
 test('mode switches preserve secrets/custom ports and are idempotent',()=>fixture(root=>{
  copyFileSync('scripts/init-env.sh',join(root,'scripts/init-env.sh'));
@@ -44,3 +44,18 @@ for(const scenario of ['target-exists','custom-volume','backup-fails','orphaned-
 test('fresh installations need no project migration',()=>fixture(root=>{assert.equal(migration(root,'no-old').status,0);assert.equal(vars(root).COMPOSE_PROJECT_NAME,undefined)}));
 
 test('an already configured migration is a no-op',()=>fixture(root=>{assert.equal(migration(root,'already-migrated').status,0);assert.equal(vars(root).VOLUME_PREFIX,'scenzly')}));
+
+test('initialization preserves the live PostgreSQL cluster identifiers',()=>fixture(root=>{
+ copyFileSync('scripts/init-env.sh',join(root,'scripts/init-env.sh'));
+ writeFileSync(join(root,'.env'),'POSTGRES_PASSWORD=existing-secret\n');
+ writeFileSync(join(root,'bin/docker'),`#!/bin/sh
+case "$*" in
+ compose*) echo existing-postgres ;;
+ inspect*POSTGRES_USER*) echo scenzly ;;
+ inspect*POSTGRES_DB*) echo scenzly ;;
+ *) exit 1 ;;
+esac
+`,{mode:0o700});
+ const result=spawnSync('sh',['scripts/init-env.sh'],{cwd:root,encoding:'utf8',env:{...process.env,PATH:join(root,'bin')+':'+process.env.PATH}});
+ assert.equal(result.status,0,result.stderr);const v=vars(root);assert.equal(v.POSTGRES_USER,'scenzly');assert.equal(v.POSTGRES_DB,'scenzly');assert.equal(v.POSTGRES_PASSWORD,'existing-secret');
+}));

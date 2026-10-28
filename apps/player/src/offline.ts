@@ -1,9 +1,10 @@
+import {legacyIdentity,removeBrowserItem} from '@visualy/shared';
 import {t,translateMessage} from '@visualy/shared';
 import { sha256 } from '@noble/hashes/sha2.js';
 import type { Manifest, Media } from '@visualy/shared';
 
-export const CACHE_PREFIX = 'scenzly-media-';
-const MANIFEST_KEY = 'scenzly-manifest';
+export const CACHE_PREFIX = 'visualy-media-';
+const MANIFEST_KEY = 'visualy-manifest';
 export type Prepared = { manifest: Manifest; urls: Record<string, string>; durable: boolean; release: () => void };
 export function mediaUrl(media: Pick<Media, 'id' | 'url'>, token: string): string {
   // A manifest cannot instruct the player to transmit its token to another host.
@@ -21,10 +22,10 @@ export function storedManifest(): Manifest | null {
   try { const raw = localStorage.getItem(MANIFEST_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
 export async function clearOffline(): Promise<void> {
-  localStorage.removeItem(MANIFEST_KEY);
+  removeBrowserItem('visualy-manifest');
   if ('caches' in globalThis) {
     const names = await caches.keys();
-    await Promise.all(names.filter(n => n.startsWith(CACHE_PREFIX)).map(n => caches.delete(n)));
+    await Promise.all(names.filter(n => (n.startsWith(CACHE_PREFIX) || n.startsWith(legacyIdentity.mediaCachePrefix))).map(n => caches.delete(n)));
   }
 }
 export async function prepareManifest(manifest: Manifest, token: string, signal?: AbortSignal): Promise<Prepared> {
@@ -44,7 +45,7 @@ export async function prepareManifest(manifest: Manifest, token: string, signal?
       const url = mediaUrl(media, token);
       let response = cache ? await caches.match(url) : undefined;
       let bytes: ArrayBuffer;
-      if (response?.headers.get('X-Screnzly-Checksum') === media.checksum.toLowerCase()) {
+      if (response && (response.headers.get('X-Visualy-Checksum') || response.headers.get(legacyIdentity.checksumHeader)) === media.checksum.toLowerCase()) {
         bytes = await response.arrayBuffer();
         verifyAsset(bytes, media.checksum);
       } else {
@@ -53,7 +54,7 @@ export async function prepareManifest(manifest: Manifest, token: string, signal?
         bytes = await response.arrayBuffer();
         verifyAsset(bytes, media.checksum);
       }
-      if (cache) await cache.put(url, new Response(bytes, { headers: { 'Content-Type': media.mime, 'Content-Length': String(bytes.byteLength), 'X-Screnzly-Checksum': media.checksum.toLowerCase() } }));
+      if (cache) await cache.put(url, new Response(bytes, { headers: { 'Content-Type': media.mime, 'Content-Length': String(bytes.byteLength), 'X-Visualy-Checksum': media.checksum.toLowerCase() } }));
       const blobUrl = URL.createObjectURL(new Blob([bytes], { type: media.mime }));
       objectUrls.push(blobUrl); urls[media.id] = blobUrl;
     }
@@ -61,7 +62,7 @@ export async function prepareManifest(manifest: Manifest, token: string, signal?
     // revision must never replace the last working revision.
     localStorage.setItem(MANIFEST_KEY, JSON.stringify(manifest));
     if (cache) {
-      const oldNames = (await caches.keys()).filter(n => n.startsWith(CACHE_PREFIX) && n !== cacheName);
+      const oldNames = (await caches.keys()).filter(n => (n.startsWith(CACHE_PREFIX) || n.startsWith(legacyIdentity.mediaCachePrefix)) && n !== cacheName);
       await Promise.all(oldNames.map(n => caches.delete(n)));
     }
     return { manifest, urls, durable: !!cache, release };

@@ -1,9 +1,11 @@
+import {migrateBrowserStorage} from './legacy.js';
+migrateBrowserStorage();
 import {english} from './translations.js';
 export type Language='fr'|'en';
 export type Theme='light'|'dark'|'system';
 const read=(key:string)=>{try{return globalThis.localStorage?.getItem(key)}catch{return null}};
-let language:Language=read('screnzly-language')==='en'?'en':'fr';
-let theme:Theme=['light','dark','system'].includes(read('screnzly-theme')||'')?read('screnzly-theme') as Theme:'system';
+let language:Language=read('visualy-language')==='en'?'en':'fr';
+let theme:Theme=['light','dark','system'].includes(read('visualy-theme')||'')?read('visualy-theme') as Theme:'system';
 const listeners=new Set<()=>void>();
 let app:'admin'|'player'='admin';
 export const getLanguage=()=>language;
@@ -31,10 +33,10 @@ export function translateMessage(value:string):string{
 }
 function apply(){if(typeof document!=='undefined'){document.documentElement.lang=language;document.documentElement.dataset.theme=resolvedTheme();document.documentElement.style.colorScheme=resolvedTheme();document.title=t(app==='admin'?'Visualy — Administration':'Visualy · Écran');}for(const callback of listeners)callback();}
 function save(key:string,value:string){try{localStorage.setItem(key,value)}catch{/* Private browsing may deny storage; keep session preferences. */}}
-export function setLanguage(value:Language){if(value!=='fr'&&value!=='en')return;language=value;save('screnzly-language',value);apply();}
-export function setTheme(value:Theme){if(!['light','dark','system'].includes(value))return;theme=value;save('screnzly-theme',value);apply();}
+export function setLanguage(value:Language){if(value!=='fr'&&value!=='en')return;language=value;save('visualy-language',value);apply();}
+export function setTheme(value:Theme){if(!['light','dark','system'].includes(value))return;theme=value;save('visualy-theme',value);apply();}
 export function initializePreferences(target:'admin'|'player'){
  app=target;apply();
  const media=globalThis.matchMedia?.('(prefers-color-scheme: dark)');media?.addEventListener('change',apply);
- globalThis.addEventListener?.('storage',event=>{if(event.key==='screnzly-language'||event.key==='screnzly-theme'||event.key===null){language=read('screnzly-language')==='en'?'en':'fr';const saved=read('screnzly-theme');theme=saved==='dark'||saved==='light'?saved:'system';apply();}});
+ globalThis.addEventListener?.('storage',event=>{if(event.key==='visualy-language'||event.key==='visualy-theme'||event.key===null){language=read('visualy-language')==='en'?'en':'fr';const saved=read('visualy-theme');theme=saved==='dark'||saved==='light'?saved:'system';apply();}});
 }

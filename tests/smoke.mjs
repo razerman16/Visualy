@@ -1,5 +1,5 @@
 /** Integration smoke test against a disposable Visualy installation.
- * Run: SCENZLY_TEST_URL=http://127.0.0.1:8080 node tests/smoke.mjs
+ * Run: VISUALY_TEST_URL=http://127.0.0.1:8080 node tests/smoke.mjs
  * Creates data. First run bootstraps an admin; retain credentials in environment
  * to repeat against that installation. Never target production.
  */
@@ -10,9 +10,9 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 
-const base = (process.env.SCENZLY_TEST_URL || 'http://127.0.0.1:8080') + '/api/v1';
-const email = process.env.SCENZLY_TEST_EMAIL || `test-${randomUUID()}@example.test`;
-const password = process.env.SCENZLY_TEST_PASSWORD || randomUUID() + '!aA1';
+const base = (process.env.VISUALY_TEST_URL || 'http://127.0.0.1:8080') + '/api/v1';
+const email = process.env.VISUALY_TEST_EMAIL || `test-${randomUUID()}@example.test`;
+const password = process.env.VISUALY_TEST_PASSWORD || randomUUID() + '!aA1';
 let cookie = '';
 let checks = 0;
 async function req(path, { method = 'GET', body, auth = 'admin', status, raw = false } = {}) {
@@ -32,10 +32,10 @@ const health = await req('/health', {auth:null});
 assert.equal(health.status, 'ok');
 await req('/screens', { auth:null, status:401 });
 const setup = await req('/auth/setup', { auth:null });
-const user = await req(setup.required ? '/auth/setup' : '/auth/login', {method:'POST',body:{email,password,name:'Recette automatisée',setupToken:process.env.SCENZLY_SETUP_TOKEN}});
+const user = await req(setup.required ? '/auth/setup' : '/auth/login', {method:'POST',body:{email,password,name:'Recette automatisée',setupToken:process.env.VISUALY_SETUP_TOKEN}});
 assert.equal(user.role,'superadmin');
 await req('/auth/me');
-await req('/auth/setup',{method:'POST',body:{email:'intruder@example.test',password,name:'Intruder',setupToken:process.env.SCENZLY_SETUP_TOKEN},status:409});
+await req('/auth/setup',{method:'POST',body:{email:'intruder@example.test',password,name:'Intruder',setupToken:process.env.VISUALY_SETUP_TOKEN},status:409});
 
 // Exercise the persisted PDF queue and publication-ready generated page.
 let pdf='%PDF-1.4\n';const offsets=[0];
@@ -49,7 +49,7 @@ for(let i=0;i<30;i++){pdfJob=(await req('/imports/pdf')).find(j=>j.id===imported
 assert.equal(pdfJob.status,'done',pdfJob.error);assert.equal(pdfJob.mediaIds.length,1);
 const pageMedia=(await req('/media')).find(m=>m.id===pdfJob.mediaIds[0]);assert.equal(pageMedia.mime,'image/png');
 
-const videoDir=await mkdtemp(join(tmpdir(),'screnzly-video-smoke-'));
+const videoDir=await mkdtemp(join(tmpdir(),'visualy-video-smoke-'));
 try{
  const source=join(videoDir,'source.avi');
  execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=160x120:r=10','-f','lavfi','-i','sine=frequency=440:sample_rate=44100','-t','1','-c:v','mpeg4','-c:a','pcm_s16le',source]);
@@ -62,8 +62,8 @@ try{
  assert.equal(job.status,'done',job.error);assert.ok(job.duration>0);
  const generated=(await req('/media')).find(m=>m.id===job.mediaId);assert.equal(generated.mime,'video/mp4');
  const mp4=await req(`/media/${job.mediaId}/file`,{raw:true});assert.ok(mp4.byteLength>0);
- if(process.env.SCENZLY_CHROMIUM){
-  const {chromium}=await import('@playwright/test');const browser=await chromium.launch({executablePath:process.env.SCENZLY_CHROMIUM,args:['--no-sandbox']});
+ if(process.env.VISUALY_CHROMIUM){
+  const {chromium}=await import('@playwright/test');const browser=await chromium.launch({executablePath:process.env.VISUALY_CHROMIUM,args:['--no-sandbox']});
   try{const page=await browser.newPage({extraHTTPHeaders:{Cookie:cookie}});await page.goto(base+'/health');await page.setContent(`<video muted loop src="${base}/media/${job.mediaId}/file"></video>`);await page.locator('video').evaluate(v=>v.play());await page.waitForFunction(()=>document.querySelector('video').currentTime>0.1);console.log('PASS: converted H.264 video decoded and played in Chromium.');}finally{await browser.close();}
  }
 }finally{await rm(videoDir,{recursive:true,force:true});}

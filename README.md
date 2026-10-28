@@ -8,7 +8,7 @@ Visualy includes an administration app, a full-screen browser player, an API, Po
 
 ![Visualy dashboard in English and dark mode — demonstration data](docs/screenshots/dashboard-dark-en.png)
 
-> **Upgrading from Screnzly?** Keep your existing `.env` and Docker volumes. The application is now called Visualy, while persistent identifiers remain compatible with existing installations. Read the [upgrade notes (French)](docs/deployment.md#passage-de-screnzly-à-visualy) and [security migration guide (French)](docs/security/hardening.md) before restarting. For an existing PostgreSQL 17 installation, follow the [PostgreSQL 18 migration instructions](#migrating-from-postgresql-17) below before starting the new stack.
+> **Upgrading an existing installation?** Keep your existing `.env` and Docker volumes. The application is now called Visualy, while persistent identifiers remain compatible with existing installations. Read the [upgrade notes (French)](docs/deployment.md#migration-vers-visualy) and [security migration guide (French)](docs/security/hardening.md) before restarting. For an existing PostgreSQL 17 installation, follow the [PostgreSQL 18 migration instructions](#migrating-from-postgresql-17) below before starting the new stack.
 
 ## Features
 
@@ -22,13 +22,13 @@ Visualy includes an administration app, a full-screen browser player, an API, Po
 
 ## Upgrading an existing Docker installation
 
-Docker now displays **visualy** as the project and image name. Before starting this version on an existing `scenzly` installation, run:
+Docker now displays **visualy** as the project and image name. Before starting this version on an installation that still uses the former Docker project name, run:
 
 ```sh
 sh scripts/migrate-visualy.sh
 ```
 
-The script backs up the old installation, stops its containers, and records `COMPOSE_PROJECT_NAME=visualy` and `VOLUME_PREFIX=scenzly` in `.env`. The new containers reuse the same database, media, and Caddy certificate volumes. It refuses unexpected volume layouts or an already existing `visualy` project instead of combining data. With no old project, it does nothing. Keep the generated backup and use the selected startup procedure below. Internal database roles, browser keys, and backup formats retain compatible identifiers.
+The script backs up the old installation, stops its containers, and records `COMPOSE_PROJECT_NAME=visualy` and the existing volume namespace in `.env`. The new containers reuse the same database, media, and Caddy certificate volumes. It refuses unexpected volume layouts or an already existing `visualy` project instead of combining data. With no old project, it does nothing. Keep the generated backup and use the selected startup procedure below. Run `sh scripts/init-env.sh` before rebuilding: it preserves the database names of existing clusters. New installations use `visualy` for the owner and database, and `visualy_app` for the application role. Browser preferences and pairing are migrated on first load; old backups and sessions remain readable through explicit compatibility helpers.
 
 ## Requirements
 
@@ -155,7 +155,7 @@ sh scripts/restore.sh ../visualy-backups/YOUR_BACKUP_DIRECTORY --replace-existin
 
 Backup briefly stops the API to freeze writes and capture PostgreSQL and media together. Restoration replaces existing data. Keep protected copies off the server: backups include application accounts and content. Back up `.env` and Caddy's persistent volumes separately; the application backup script does not include them.
 
-Existing `scenzly` volumes and backup formats remain readable after migration. New installations use the `visualy` project name. See the [operations guide (French)](docs/deployment.md) for the complete procedure.
+Existing volumes and backup formats remain readable after migration. New installations use the `visualy` project name. See the [operations guide (French)](docs/deployment.md) for the complete procedure.
 
 ## Migrating from PostgreSQL 17
 
@@ -187,12 +187,12 @@ Conversion tests require FFmpeg, ffprobe, and Poppler on the machine running the
 Integration tests create and modify data. Run them only against a dedicated, disposable installation, supplying its test credentials and initial setup token where required:
 
 ```sh
-SCENZLY_TEST_URL=http://127.0.0.1:8080 npm run test:smoke
+VISUALY_TEST_URL=http://127.0.0.1:8080 npm run test:smoke
 # Optional Chromium playback checks:
-SCENZLY_CHROMIUM=/usr/bin/chromium npm run test:smoke
+VISUALY_CHROMIUM=/usr/bin/chromium npm run test:smoke
 ```
 
-The `SCENZLY_*` test environment variables retain their original names for compatibility.
+Test environment variables use the `VISUALY_*` prefix.
 
 | Directory | Purpose |
 | --- | --- |

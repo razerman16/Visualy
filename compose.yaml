@@ -8,14 +8,14 @@ services:
   postgres:
     image: postgres:18-bookworm
     environment:
-      POSTGRES_DB: scenzly
-      POSTGRES_USER: scenzly
+      POSTGRES_DB: ${POSTGRES_DB:-visualy}
+      POSTGRES_USER: ${POSTGRES_USER:-visualy}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Executez sh scripts/init-env.sh}
     volumes:
       - postgres18-data:/var/lib/postgresql
     networks: [database]
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U scenzly -d scenzly"]
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
       interval: 5s
       timeout: 5s
       retries: 15
@@ -27,7 +27,7 @@ services:
     build: *api-build
     command: [node, apps/api/dist/migrate.js]
     environment:
-      DATABASE_URL: postgresql://scenzly:${POSTGRES_PASSWORD:?Executez sh scripts/init-env.sh}@postgres:5432/scenzly
+      DATABASE_URL: postgresql://${POSTGRES_USER:-visualy}:${POSTGRES_PASSWORD:?Executez sh scripts/init-env.sh}@postgres:5432/${POSTGRES_DB:-visualy}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Executez sh scripts/init-env.sh}
     networks: [database]
     depends_on:
@@ -42,7 +42,7 @@ services:
   api:
     build: *api-build
     environment:
-      DATABASE_URL: postgresql://screnzly_app:${APP_DB_PASSWORD:?Executez sh scripts/init-env.sh}@postgres:5432/scenzly
+      DATABASE_URL: postgresql://visualy_app:${APP_DB_PASSWORD:?Executez sh scripts/init-env.sh}@postgres:5432/${POSTGRES_DB:-visualy}
       HOST: 0.0.0.0
       PORT: 3000
       MEDIA_DIR: /data/media

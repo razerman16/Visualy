@@ -77,7 +77,21 @@ test('revocation cleanup clears media and manifest but preserves app shell', asy
   try {
     globalThis.fetch = async () => new Response(data);
     const first = await prepareManifest(manifest(), 'token'); first.release();
-    await cacheStorage.open('scenzly-shell-v1'); await clearOffline();
-    assert.equal(storedManifest(), null); assert.deepEqual(await cacheStorage.keys(), ['scenzly-shell-v1']);
+    await cacheStorage.open('visualy-shell-v1'); await clearOffline();
+    assert.equal(storedManifest(), null); assert.deepEqual(await cacheStorage.keys(), ['visualy-shell-v1']);
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test('legacy media cache is verified and migrated without downloading again', async () => {
+  const {legacyIdentity}=await import('@visualy/shared');
+  const {cacheStorage,storage}=setup();const originalFetch=globalThis.fetch;
+  try {
+    const old=await cacheStorage.open(legacyIdentity.mediaCachePrefix+'old-revision');
+    await old.put(mediaUrl(media,'token'),new Response(data,{headers:{[legacyIdentity.checksumHeader]:checksum}}));
+    storage.setItem('visualy-manifest',JSON.stringify(manifest()));
+    globalThis.fetch=async()=>{throw new Error('offline')};
+    const migrated=await prepareManifest(manifest(),'token');migrated.release();
+    const names=await cacheStorage.keys();assert.equal(names.length,1);assert.ok(names[0].startsWith('visualy-media-'));
+    const response=await (await cacheStorage.open(names[0])).match(mediaUrl(media,'token'));assert.equal(response?.headers.get('X-Visualy-Checksum'),checksum);
+  } finally {globalThis.fetch=originalFetch}
 });

@@ -19,7 +19,7 @@ Les correctifs S01 à S10 sont implémentés. Le [guide de migration](hardening.
 
 ## Images et risques résiduels
 
-La [synthèse des scans](image-scan-summary-2026-10-28.json) contient les identifiants d’images et les résultats Trivy. Les décomptes sont des occurrences paquet/avis et peuvent contenir plusieurs occurrences d’une même CVE.
+La [synthèse des scans](archive/image-scan-summary-2026-10-28.json) contient les identifiants d’images et les résultats Trivy. Les décomptes sont des occurrences paquet/avis et peuvent contenir plusieurs occurrences d’une même CVE.
 
 | Image testée | Alertes HIGH/CRITICAL avec correction annoncée | Alertes HIGH/CRITICAL sans correction annoncée |
 | --- | ---: | ---: |

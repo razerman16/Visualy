@@ -2,7 +2,7 @@
 
 # Correctifs de sécurité et migration
 
-Les dix constats de `review-2026-10-27.md` font l’objet de corrections dans cette version. Le rapport initial reste une photographie du commit audité, pas une description du code corrigé.
+Les dix constats de `archive/review-2026-10-27.md` font l’objet de corrections dans cette version. Le rapport initial reste une photographie du commit audité, pas une description du code corrigé.
 
 ## Installation existante
 
@@ -11,7 +11,7 @@ Prévoir une fenêtre de maintenance et une sauvegarde vérifiée. Ne jamais sup
 1. Sur l’ancienne version, exécuter `sh scripts/backup.sh` et conserver la sauvegarde hors du serveur. Protéger également `.env` et les certificats Caddy existants.
 2. Récupérer le code : `git pull`. Lancer `sh scripts/migrate-visualy.sh` pour sauvegarder et migrer le projet Docker existant, puis `sh scripts/init-env.sh` : les secrets existants restent inchangés et les secrets manquants sont générés, sans être affichés.
 3. Activer HTTPS avec `sh scripts/init-env.sh --https`. Choisir si nécessaire les ports publics `CADDY_HTTP_PORT` (80 par défaut) et `CADDY_HTTPS_PORT` (443) dans `.env`, puis définir `ADMIN_DOMAIN` et `PLAYER_DOMAIN` (par défaut `admin.visualy.home.arpa` et `player.visualy.home.arpa`). Faire pointer ces deux noms DNS locaux vers le serveur. Si `172.30.240.0/24` chevauche le LAN/VPN, définir un autre `FRONTEND_SUBNET`, une plage dynamique `FRONTEND_DYNAMIC_RANGE` à l’intérieur de ce sous-réseau et une adresse `CADDY_IP` dans le sous-réseau mais hors de cette plage ; cette adresse doit être réservée à Caddy.
-4. Exécuter `docker compose up -d --build --wait`. Le service ponctuel `migrate` crée le rôle limité `screnzly_app`, met à niveau le schéma et accorde les droits. Seul ce service reçoit les identifiants du propriétaire PostgreSQL. L’API refuse désormais un compte superadministrateur PostgreSQL. Les volumes existants et les comptes sont conservés.
+4. Exécuter `docker compose up -d --build --wait`. Le service ponctuel `migrate` crée le rôle limité `visualy_app`, met à niveau le schéma et accorde les droits. Seul ce service reçoit les identifiants du propriétaire PostgreSQL. L’API refuse désormais un compte superadministrateur PostgreSQL. Les volumes existants et les comptes sont conservés.
 5. Exporter l’autorité locale avec `docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./visualy-root.crt`, puis installer ce certificat comme autorité approuvée sur chaque poste/lecteur. Ne jamais distribuer `root.key`. Ouvrir les deux URL HTTPS et vérifier l’absence d’erreur de certificat.
 6. Vérifier `docker compose ps`, la connexion, un import PDF/vidéo et la diffusion. `migrate` doit avoir terminé avec code 0 ; les autres services doivent être sains.
 
@@ -60,7 +60,7 @@ npm run test:security
 npm audit --audit-level=high
 ```
 
-`tests/security/accounts.mjs` et `tests/smoke.mjs` créent des données : les exécuter uniquement sur une installation jetable, en fournissant `SCENZLY_TEST_URL`, `SCENZLY_TEST_EMAIL`, `SCENZLY_TEST_PASSWORD` et, pour l’installation initiale, `SCENZLY_SETUP_TOKEN`. `tests/security/database.mjs` vérifie les refus SQL avec `TEST_APP_DATABASE_URL` du rôle limité.
+`tests/security/accounts.mjs` et `tests/smoke.mjs` créent des données : les exécuter uniquement sur une installation jetable, en fournissant `VISUALY_TEST_URL`, `VISUALY_TEST_EMAIL`, `VISUALY_TEST_PASSWORD` et, pour l’installation initiale, `VISUALY_SETUP_TOKEN`. `tests/security/database.mjs` vérifie les refus SQL avec `TEST_APP_DATABASE_URL` du rôle limité.
 
 La CI exécute les tests et l’audit npm, et construit/scanne les quatre images avec Trivy. Les vulnérabilités HIGH/CRITICAL disposant d’une correction font échouer le scan ; les avis sans correctif doivent toujours être suivis par l’exploitant. Les images doivent être reconstruites régulièrement pour intégrer les correctifs système.
 

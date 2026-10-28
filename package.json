@@ -14,7 +14,8 @@
     "dev:player": "npm run dev -w @visualy/player",
     "test:smoke": "node tests/smoke.mjs",
     "test:security": "tsx --test tests/security/*.test.ts",
-    "test:deployment": "node tests/deployment-config.mjs && node --test tests/deployment-scripts.test.mjs"
+    "test:deployment": "node tests/deployment-config.mjs && node --test tests/legacy/deployment-scripts.test.mjs",
+    "test:branding": "node tests/branding.mjs"
   },
   "engines": {
     "node": ">=22"

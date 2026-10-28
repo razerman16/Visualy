@@ -17,6 +17,8 @@ for key in POSTGRES_PASSWORD APP_DB_PASSWORD SETUP_TOKEN CONVERTER_TOKEN; do
     fi
 done
 unset value
+. ./scripts/legacy-identifiers.sh
+preserve_database_identity
 # Make supported network settings discoverable in generated and existing files.
 # Preserve user choices, including custom ports.
 while IFS='=' read -r key value; do
@@ -24,6 +26,8 @@ while IFS='=' read -r key value; do
         printf '\n%s=%s\n' "$key" "$value" >> .env
     fi
 done <<'DEFAULTS'
+POSTGRES_USER=visualy
+POSTGRES_DB=visualy
 BIND_ADDRESS=0.0.0.0
 ADMIN_PORT=8080
 PLAYER_PORT=8081

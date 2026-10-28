@@ -18,6 +18,7 @@ Ouvrir `http://IP_DU_SERVEUR:8080` et `http://IP_DU_SERVEUR:8081`. Aucune adress
 | `ADMIN_PORT` | `8080` | Administration HTTP directe |
 | `PLAYER_PORT` | `8081` | Lecteur HTTP direct |
 | `BIND_ADDRESS` | `0.0.0.0` | Interfaces IPv4 publiées |
+| `POSTGRES_USER` / `POSTGRES_DB` | `visualy` / `visualy` | Noms pour une nouvelle installation ; conservés pour un cluster existant |
 | `POSTGRES_PASSWORD` | aléatoire | Mot de passe du propriétaire PostgreSQL |
 | `APP_DB_PASSWORD` | aléatoire, 64 caractères hexadécimaux | Compte API à droits limités |
 | `SETUP_TOKEN` | aléatoire | Clé de création du premier compte |
@@ -46,7 +47,7 @@ HTTPS optionnel : navigateurs → Caddy → admin-web / player-web → API
                                                                └→ convertisseur isolé
 ```
 
-Seuls les services web sont exposés. L’API, PostgreSQL et le convertisseur restent internes. Les volumes `visualy_postgres18-data` et `visualy_media-data` conservent les données des nouvelles installations. Une installation migrée réutilise ses volumes `scenzly_*` via `VOLUME_PREFIX=scenzly`. `docker compose down` conserve les volumes ; `down -v` les supprime.
+Seuls les services web sont exposés. L’API, PostgreSQL et le convertisseur restent internes. Les volumes `visualy_postgres18-data` et `visualy_media-data` conservent les données des nouvelles installations. Une installation migrée réutilise ses volumes historiques via le `VOLUME_PREFIX` enregistré par le script. `docker compose down` conserve les volumes ; `down -v` les supprime.
 
 HTTP convient à un réseau local de confiance et ne chiffre pas les identifiants ni les médias. Les sessions conservent HttpOnly et SameSite=Strict ; Secure est activé uniquement par les overrides HTTPS. Le cache persistant des lecteurs distants nécessite HTTPS approuvé. Autoriser les ports choisis dans le pare-feu LAN du serveur ; aucune redirection sur la box n’est nécessaire.
 
@@ -77,9 +78,9 @@ Le mode par défaut le permet sans détection : `http://IP_DU_SERVEUR:ADMIN_PORT
 
 Utiliser `sh scripts/init-env.sh --localhost`, puis suivre [la procédure localhost](https.md#localhost). HTTP sur localhost fonctionne également avec la configuration de base et ses ports 8080/8081.
 
-## Passage de Screnzly à Visualy
+## Migration vers Visualy
 
-Le nom et les packages deviennent Visualy ; le projet Docker devient `visualy` ; exécuter `sh scripts/migrate-visualy.sh` avant le premier démarrage sur une installation `scenzly`. Le script sauvegarde les données, arrête l’ancien projet et configure la réutilisation de ses volumes. La base, le rôle `screnzly_app`, les cookies, les clés navigateur et le format des sauvegardes restent compatibles. Conserver `.env`, secrets et volumes. Ne pas changer simplement le nom du projet sans cette migration : Docker pourrait créer des volumes vides.
+Le nom et les packages deviennent Visualy ; le projet Docker devient `visualy` ; exécuter `sh scripts/migrate-visualy.sh` avant le premier démarrage sur une installation utilisant encore le nom de projet historique. Le script sauvegarde les données, arrête l’ancien projet et configure la réutilisation de ses volumes. Les nouvelles installations utilisent `POSTGRES_USER=visualy`, `POSTGRES_DB=visualy` et le rôle `visualy_app`. Sur une installation existante, exécuter `sh scripts/init-env.sh` avant de recréer les conteneurs : le script conserve les noms réels du cluster dans `.env`. Le rôle applicatif est renommé au démarrage du service migrate. Les nouvelles sessions et clés navigateur portent le nom Visualy ; les anciennes valeurs sont lues puis migrées. Les sauvegardes historiques restent restaurables. Conserver `.env`, secrets et volumes. Ne pas changer simplement le nom du projet sans cette migration : Docker pourrait créer des volumes vides.
 
 Les rapports de sécurité datés décrivent la version examinée à leur date ; le mode HTTP actuel est un choix de déploiement distinct. Pour les protections de transport, utiliser le mode HTTPS décrit dans [le durcissement](security/hardening.md).
 
@@ -110,7 +111,7 @@ Testez régulièrement une restauration sur un serveur de secours. Utilisez des 
 3. Lancez explicitement le remplacement :
 
    ```sh
-   sh scripts/restore.sh /chemin/scenzly-SAUVEGARDE --replace-existing-data
+   sh scripts/restore.sh /chemin/visualy-SAUVEGARDE --replace-existing-data
    ```
 
 4. Vérifiez `docker compose ps`, connectez-vous et vérifiez les médias, les programmes et les écrans. Si les noms DNS et le stockage navigateur restent identiques, les jetons appareils restaurés peuvent continuer à fonctionner ; sinon refaites le jumelage.
@@ -129,7 +130,7 @@ docker compose up -d --build --wait
 docker compose logs --tail 100 api
 ```
 
-HTTPS est inclus dans la configuration normale. Ne lancez pas `down -v`. Pour revenir à une version incompatible avec le schéma courant, restaurez aussi la sauvegarde correspondante. Cette version initialise son schéma de manière idempotente ; des migrations de schéma versionnées seront nécessaires pour les évolutions qui modifient les données.
+HTTPS reste optionnel. Ne lancez pas `down -v`. Pour revenir à une version incompatible avec le schéma courant, restaurez aussi la sauvegarde correspondante. Cette version initialise son schéma de manière idempotente ; des migrations de schéma versionnées seront nécessaires pour les évolutions qui modifient les données.
 
 ## Réseau isolé
 
@@ -147,3 +148,11 @@ Sur une machine de préparation connectée, construisez les quatre images Visual
 Ne publiez pas les journaux complets ou les sauvegardes : ils peuvent contenir des données internes. Les journaux nginx omettent volontairement la chaîne de requête, qui peut transporter un jeton de lecteur.
 
 Pour migrer une installation PostgreSQL 17, suivre la section PostgreSQL 18 du README avant tout redémarrage avec le nouveau fichier Compose. Le volume 17 ne doit jamais être monté directement dans PostgreSQL 18.
+
+## Identifiants Visualy et compatibilité
+
+Le code courant, les variables de test (`VISUALY_*`), les cookies, les caches et les nouvelles sauvegardes utilisent Visualy. Seuls les fichiers explicitement nommés `legacy`, leurs tests et les rapports archivés contiennent les anciens noms nécessaires à leur lecture. Les rapports de scan archivés conservent les noms exacts des images réellement examinées.
+
+Les identifiants d’un cluster PostgreSQL existant et le namespace de ses volumes restent des paramètres du `.env` : ne pas les remplacer à la main. `sh scripts/init-env.sh` les reprend depuis le conteneur existant ou la configuration de migration. Les nouvelles installations créent des identifiants Visualy. Le service `migrate` renomme automatiquement l’ancien rôle applicatif en `visualy_app`, en préservant ses droits.
+
+Sur la même origine navigateur, les préférences, le manifeste et le jumelage passent automatiquement vers les clés `visualy-*`. Les anciens caches média restent lisibles, sont vérifiés par SHA-256, puis remplacés une fois leur copie complète validée. Un changement d’origine nécessite toujours un nouveau jumelage. Les anciennes sauvegardes restent acceptées, mais les nouvelles portent `Visualy backup format 1`.

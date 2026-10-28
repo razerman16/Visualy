@@ -4,11 +4,11 @@
 
 Plateforme d’affichage dynamique auto-hébergée pour un réseau local : une administration web, un lecteur plein écran par appareil, une API et PostgreSQL. Le logiciel fonctionne sans compte cloud ni service externe à l’exécution. Le téléchargement initial des images Docker et des dépendances nécessite Internet ; les images peuvent ensuite être transportées vers un serveur isolé.
 
-Screnzly devient **Visualy**. Pour une installation existante, conservez votre `.env` et vos volumes : voir [la mise à jour vers Visualy](docs/deployment.md#passage-de-screnzly-à-visualy).
+Le projet utilise désormais **Visualy** pour ses identifiants applicatifs. Pour une installation existante, conservez votre `.env` et vos volumes : voir [la mise à jour vers Visualy](docs/deployment.md#migration-vers-visualy).
 
 ## Migration du nom Docker
 
-Avant le premier démarrage de cette version sur une installation `scenzly`, exécuter `sh scripts/migrate-visualy.sh`. Le script sauvegarde l’installation, arrête l’ancien projet et configure `visualy` pour réutiliser les mêmes volumes (`VOLUME_PREFIX=scenzly`). Il refuse un projet cible déjà présent ou des volumes inattendus. Sans ancien projet, il ne modifie rien. Les identifiants internes de base et de navigateur restent compatibles.
+Avant le premier démarrage de cette version sur une installation utilisant encore l’ancien nom Docker, exécuter `sh scripts/migrate-visualy.sh`. Le script sauvegarde l’installation, arrête l’ancien projet et configure `visualy` pour réutiliser les mêmes volumes (namespace de volumes enregistré dans `.env`). Il refuse un projet cible déjà présent ou des volumes inattendus. Sans ancien projet, il ne modifie rien. Exécuter aussi `sh scripts/init-env.sh` avant de reconstruire : les noms d’une base existante sont conservés dans `.env`. Les nouveaux identifiants utilisent Visualy ; les préférences et jumelages navigateur sont repris automatiquement.
 
 ## Démarrer en HTTP, sans Caddy
 
@@ -81,7 +81,7 @@ Le mode de développement `-f compose.yaml -f compose.dev.yaml` limite HTTP à l
 ```sh
 sh scripts/backup.sh
 # Sur l'instance a restaurer, apres creation des conteneurs :
-sh scripts/restore.sh ../visualy-backups/SCENZLY_SAUVEGARDE --replace-existing-data
+sh scripts/restore.sh ../visualy-backups/VISUALY_SAUVEGARDE --replace-existing-data
 ```
 
 La sauvegarde interrompt brièvement l’API pour figer les écritures et sauvegarder ensemble PostgreSQL et les médias. La restauration remplace les données existantes. Conservez les sauvegardes hors du serveur et protégez-les : elles contiennent les comptes et les données de l’application. Détails dans [le guide d’exploitation](docs/deployment.md).
@@ -101,7 +101,7 @@ npm test
 Les tests d’intégration modifient une instance dédiée et vide ; ne les exécutez pas sur une installation utilisée :
 
 ```sh
-SCENZLY_TEST_URL=http://127.0.0.1:8080 npm run test:smoke
+VISUALY_TEST_URL=http://127.0.0.1:8080 npm run test:smoke
 ```
 
 Les détails du contrat sont dans [docs/api-contract.md](docs/api-contract.md). Les points d’entrée sont `apps/admin`, `apps/player`, `apps/api` et `packages/shared` pour les types et la planification.
@@ -132,7 +132,7 @@ Dans **Médiathèque → Conversion vidéo**, importez un MP4/MOV, MKV/WebM ou A
 
 Limites : 500 Mo, 1 heure, dimensions source 8192 pixels maximum ; sortie limitée à 1920 × 1080 en conservant le ratio. Une conversion utilise deux threads et expire après 15 minutes. Un travail par instance API est traité à la fois, indépendamment des imports PDF. La file reprend les travaux interrompus après redémarrage ; les erreurs sont visibles dans l’interface. Les fichiers sources temporaires sont supprimés après succès ou échec définitif. L’import direct des médias existant reste disponible sans conversion.
 
-Les tests de conversion nécessitent FFmpeg/ffprobe et Poppler sur la machine qui lance `npm test`. Pour vérifier aussi la lecture Chromium sur une instance de recette vide : `SCENZLY_CHROMIUM=/usr/bin/chromium npm run test:smoke`.
+Les tests de conversion nécessitent FFmpeg/ffprobe et Poppler sur la machine qui lance `npm test`. Pour vérifier aussi la lecture Chromium sur une instance de recette vide : `VISUALY_CHROMIUM=/usr/bin/chromium npm run test:smoke`.
 
 ## Interface
 

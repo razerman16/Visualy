@@ -1,5 +1,6 @@
 /* Cache only the player shell. Media is stored by the page after SHA-256 verification. */
-const SHELL_CACHE = 'scenzly-shell-v5';
+importScripts('/legacy-sw.js');
+const SHELL_CACHE = 'visualy-shell-v6';
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
@@ -7,7 +8,7 @@ self.addEventListener('install', event => {
     if (!response.ok) throw new Error('Player shell unavailable');
     const html = await response.clone().text();
     const assetPaths = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)].map(m => m[1]).filter(p => p.startsWith('/assets/'));
-    await cache.addAll([...new Set([...assetPaths, '/preferences-init.js', '/manifest.webmanifest', '/brand/visualy-logo.png', '/brand/visualy-logo-dark.png', '/brand/visualy-mark.png'])]);
+    await cache.addAll([...new Set([...assetPaths, '/preferences-init.js', '/legacy-sw.js', '/manifest.webmanifest', '/brand/visualy-logo.png', '/brand/visualy-logo-dark.png', '/brand/visualy-mark.png'])]);
     // Fonts referenced by the stylesheet must also be available offline.
     for (const path of assetPaths.filter(path => path.endsWith('.css'))) {
       const css = await (await cache.match(path)).text();
@@ -19,7 +20,7 @@ self.addEventListener('install', event => {
   })());
 });
 self.addEventListener('activate', event => event.waitUntil((async () => {
-  for (const key of await caches.keys()) if (key.startsWith('scenzly-shell-') && key !== SHELL_CACHE) await caches.delete(key);
+  for (const key of await caches.keys()) if ((key.startsWith('visualy-shell-') || key.startsWith(self.visualyLegacyShellPrefix)) && key !== SHELL_CACHE) await caches.delete(key);
   await self.clients.claim();
 })()));
 self.addEventListener('fetch', event => {
@@ -30,7 +31,7 @@ self.addEventListener('fetch', event => {
       const cached = await caches.match('/', { cacheName: SHELL_CACHE });
       return cached || new Response('Visualy : premier démarrage hors ligne impossible.', { status: 503 });
     }));
-  } else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/brand/') || ['/preferences-init.js', '/manifest.webmanifest'].includes(url.pathname)) {
+  } else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/brand/') || ['/preferences-init.js', '/legacy-sw.js', '/manifest.webmanifest'].includes(url.pathname)) {
     event.respondWith(caches.match(event.request, { cacheName: SHELL_CACHE, ignoreVary: true }).then(cached => cached || fetch(event.request)));
   }
 });

@@ -1,11 +1,11 @@
 import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 import {fixtures} from '../ui/fixtures.mjs';
-const admin=process.env.SCENZLY_TEST_URL||'http://127.0.0.1:18380';
+const admin=process.env.VISUALY_TEST_URL||'http://127.0.0.1:18380';
 for(const path of ['/','/preferences-init.js','/assets/missing.js']){
  const r=await fetch(admin+path);assert.equal(r.headers.get('x-frame-options'),'DENY');assert.equal(r.headers.get('x-content-type-options'),'nosniff');assert.equal(r.headers.get('referrer-policy'),'no-referrer');assert.match(r.headers.get('content-security-policy'),/frame-ancestors 'none'/);
 }
-const browser=await chromium.launch({executablePath:process.env.SCENZLY_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
+const browser=await chromium.launch({executablePath:process.env.VISUALY_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
 try{
  const page=await browser.newPage();let outbound=false;
  await page.route('https://security-probe.invalid/**',r=>{outbound=true;return r.abort()});

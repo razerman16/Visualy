@@ -1,13 +1,13 @@
 // Run only against a disposable installation. Existing superadmin supplied via environment.
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-const base=(process.env.SCENZLY_TEST_URL||'http://127.0.0.1:18380')+'/api/v1';
+const base=(process.env.VISUALY_TEST_URL||'http://127.0.0.1:18380')+'/api/v1';
 const password='Disposable password 2026!';
 async function request(path,{cookie='',method='GET',body,status=200,headers={}}={}){
  const response=await fetch(base+path,{method,headers:{...headers,...(cookie?{Cookie:cookie}:{}),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
  const data=await response.json();assert.equal(response.status,status,`${method} ${path}: ${JSON.stringify(data)}`);return {data,cookie:response.headers.get('set-cookie')?.split(';')[0],headers:response.headers};
 }
-const {cookie:admin}=await request('/auth/login',{method:'POST',body:{email:process.env.SCENZLY_TEST_EMAIL,password:process.env.SCENZLY_TEST_PASSWORD}});
+const {cookie:admin}=await request('/auth/login',{method:'POST',body:{email:process.env.VISUALY_TEST_EMAIL,password:process.env.VISUALY_TEST_PASSWORD}});
 assert.ok(admin);
 const email=`security-${randomUUID()}@example.test`;
 const {data:editor}=await request('/users',{method:'POST',cookie:admin,status:201,body:{name:'Security editor',email,password,role:'editor'}});
@@ -22,7 +22,7 @@ const c=await request('/auth/login',{method:'POST',body:{email,password:password
 await request(`/users/${editor.id}/revoke-sessions`,{cookie:admin,method:'POST'});await request('/auth/me',{cookie:c.cookie,status:401});
 await request(`/users/${editor.id}`,{cookie:admin,method:'PATCH',body:{disabled:true}});await request('/auth/login',{method:'POST',status:401,body:{email,password:password+' new'}});
 await request(`/users/${editor.id}`,{cookie:admin,method:'PATCH',body:{disabled:false}});
-await request(`/users/${editor.id}/password`,{cookie:admin,method:'POST',body:{currentPassword:process.env.SCENZLY_TEST_PASSWORD,password}});
+await request(`/users/${editor.id}/password`,{cookie:admin,method:'POST',body:{currentPassword:process.env.VISUALY_TEST_PASSWORD,password}});
 const d=await request('/auth/login',{method:'POST',body:{email,password}});
 await request(`/users/${editor.id}`,{cookie:admin,method:'PATCH',body:{role:'viewer'}});await request('/auth/me',{cookie:d.cookie,status:401});
 const v=await request('/auth/login',{method:'POST',body:{email,password}});

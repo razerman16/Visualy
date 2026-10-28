@@ -1,3 +1,4 @@
+import {removeBrowserItem} from '@visualy/shared';
 import Preferences from './Preferences';
 import {initializePreferences,subscribePreferences,preferenceSnapshot} from '@visualy/shared';
 import {t,translateMessage} from '@visualy/shared';
@@ -54,14 +55,14 @@ function Pairing({ paired, notice }: { paired: (token: string) => void; notice: 
     </main><footer className="pair-footer"><span>{t("Votre contenu. Vos écrans. Votre réseau.")}</span><span title={id}>{t("Appareil")}{" "}{id.slice(0, 8)}</span></footer></div>;
 }
 function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('scenzly-player-token') || '');
+  const [token, setToken] = useState(() => localStorage.getItem('visualy-player-token') || '');
   const [prepared, setPrepared] = useState<Prepared | null>(null);
   const active = useRef<Prepared | null>(null);
   const [now, setNow] = useState(new Date());
   const [status, setStatus] = useState(t("Synchronisation en cours…"));
   const [notice, setNotice] = useState('');
   const [offline, setOffline] = useState(false);
-  const [maintenance, setMaintenance] = useState(localStorage.getItem('scenzly-maintenance') === 'true');
+  const [maintenance, setMaintenance] = useState(localStorage.getItem('visualy-maintenance') === 'true');
   const [showControls, setShowControls] = useState(false);
   const currentProgram = useRef<string | null>(null);
   const events = useRef<Array<{ type: string; programId?: string; itemId?: string; message?: string; at: string }>>([]);
@@ -69,7 +70,7 @@ function App() {
   const queueEvent = useCallback((event: { type: string; itemId?: string; message?: string }) => { events.current.push({ ...event, ...(currentProgram.current ? { programId: currentProgram.current } : {}), at: new Date().toISOString() }); if (events.current.length > 100) events.current.shift(); }, []);
   const onItem = useCallback((itemId: string) => queueEvent({ type: 'play', itemId }), [queueEvent]);
   const onError = useCallback((message: string) => { if (lastError.current === message) return; lastError.current = message; setStatus(message); queueEvent({ type: 'error', message }); }, [queueEvent]);
-  const paired = useCallback((value: string) => { localStorage.setItem('scenzly-player-token', value); setNotice(''); setToken(value); }, []);
+  const paired = useCallback((value: string) => { localStorage.setItem('visualy-player-token', value); setNotice(''); setToken(value); }, []);
   useEffect(() => { const interval = setInterval(() => setNow(new Date()), 250); return () => clearInterval(interval); }, []);
   useEffect(() => { if (!showControls) return; const timer = setTimeout(() => setShowControls(false), 6000); return () => clearTimeout(timer); }, [showControls]);
   useEffect(() => {
@@ -95,7 +96,7 @@ function App() {
         if (manifest.revision !== active.current?.manifest.revision) activate(await prepareManifest(manifest, token, controller.signal));
         const heartbeat = await api<{ commands: Array<{ id: string; type: string }> }>('/players/me/heartbeat', token, { programId: currentProgram.current || undefined, revision: active.current?.manifest.revision, error: lastError.current || undefined }, controller.signal);
         for (const command of heartbeat.commands || []) {
-          if (command.type === 'maintenance' || command.type === 'resume') { const value = command.type === 'maintenance'; localStorage.setItem('scenzly-maintenance', String(value)); setMaintenance(value); }
+          if (command.type === 'maintenance' || command.type === 'resume') { const value = command.type === 'maintenance'; localStorage.setItem('visualy-maintenance', String(value)); setMaintenance(value); }
           if (command.type === 'clear-cache') { await clearOffline(); activate(await prepareManifest(manifest, token, controller.signal)); }
           if (command.type === 'refresh') { const refreshed = await api<Manifest>('/players/me/manifest', token, undefined, controller.signal); if (refreshed.revision !== active.current?.manifest.revision) activate(await prepareManifest(refreshed, token, controller.signal)); }
         }
@@ -105,7 +106,7 @@ function App() {
       } catch (err) {
         if (controller.signal.aborted) return;
         if (err instanceof Revoked) {
-          localStorage.removeItem('scenzly-player-token'); localStorage.removeItem('scenzly-maintenance');
+          removeBrowserItem('visualy-player-token'); removeBrowserItem('visualy-maintenance');
           await clearOffline().catch(() => {}); active.current?.release(); active.current = null; setPrepared(null); setMaintenance(false); setNotice(t("Écran dissocié : utilisez ce nouveau code pour le reconnecter.")); events.current = []; setToken('');
         } else { setOffline(true); setStatus(errorMessage(err)); }
       } finally { busy = false; }

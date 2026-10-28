@@ -11,7 +11,7 @@ export function playlistPosition(items: PlaylistItem[], elapsedMs: number): { it
   return { item: items[0], index: 0 };
 }
 export function deviceId(): string {
-  const existing = localStorage.getItem('scenzly-device-id');
+  const existing = localStorage.getItem('visualy-device-id');
   if (existing) return existing;
   // getRandomValues also works over HTTP on a private LAN; randomUUID does not.
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -19,5 +19,5 @@ export function deviceId(): string {
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
   const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
   const id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-  localStorage.setItem('scenzly-device-id', id); return id;
+  localStorage.setItem('visualy-device-id', id); return id;
 }
