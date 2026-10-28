@@ -11,7 +11,7 @@ import {transcodeVideo} from './video-imports.js';
 import {digest} from './security.js';
 import {directoryBytes} from './upload-guard.js';
 const root=process.env.CONVERSION_DIR||'/data/work';
-const app=Fastify({bodyLimit:1024,logger:true});let busy=false;
+const app=Fastify({bodyLimit:1024,logger:{name:'visualy-converter'}});let busy=false;
 if(!process.env.CONVERTER_TOKEN||process.env.CONVERTER_TOKEN.length<32)throw new Error('Converter token required');
 app.addContentTypeParser('application/octet-stream',(_req,payload,done)=>done(null,payload));
 app.get('/health',async()=>({ok:true}));

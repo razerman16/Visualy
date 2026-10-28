@@ -4,8 +4,6 @@ services:
     environment:
       COOKIE_SECURE: "false"
   admin-web:
-    ports: ["127.0.0.1:${DEV_ADMIN_PORT:-8080}:80"]
+    ports: !override ["127.0.0.1:${DEV_ADMIN_PORT:-8080}:80"]
   player-web:
-    ports: ["127.0.0.1:${DEV_PLAYER_PORT:-8081}:80"]
-  caddy:
-    profiles: [https]
+    ports: !override ["127.0.0.1:${DEV_PLAYER_PORT:-8081}:80"]

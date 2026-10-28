@@ -1,2 +1,46 @@
-# Compatibility override: HTTPS is now the default in compose.yaml.
-services: {}
+# Optional HTTPS through Caddy. Direct HTTP ports are removed.
+services:
+  api:
+    environment:
+      COOKIE_SECURE: "true"
+  admin-web:
+    ports: !reset []
+    environment:
+      TRUSTED_PROXY_IP: ${CADDY_IP:-172.30.240.2}
+  player-web:
+    ports: !reset []
+    environment:
+      TRUSTED_PROXY_IP: ${CADDY_IP:-172.30.240.2}
+  caddy:
+    image: caddy:2.10-alpine
+    ports:
+      - "${BIND_ADDRESS:-0.0.0.0}:${CADDY_HTTP_PORT:-80}:80"
+      - "${BIND_ADDRESS:-0.0.0.0}:${CADDY_HTTPS_PORT:-443}:443"
+    environment:
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      ALL_PROXY: ""
+      all_proxy: ""
+      NO_PROXY: "*"
+      no_proxy: "*"
+      CADDY_HTTPS_PORT: ${CADDY_HTTPS_PORT:-443}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.visualy.home.arpa}
+      PLAYER_DOMAIN: ${PLAYER_DOMAIN:-player.visualy.home.arpa}
+    networks:
+      frontend:
+        ipv4_address: ${CADDY_IP:-172.30.240.2}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      admin-web:
+        condition: service_healthy
+      player-web:
+        condition: service_healthy
+    mem_limit: 256m
+    pids_limit: 100
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped

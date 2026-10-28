@@ -3,10 +3,10 @@
 set -eu
 cd "$(dirname "$0")/.."
 umask 077
-scenzly_backup_root=${1:-../scenzly-backups}
+scenzly_backup_root=${1:-../visualy-backups}
 mkdir -p "$scenzly_backup_root"
 scenzly_backup_root=$(cd "$scenzly_backup_root" && pwd)
-scenzly_backup_dir="$scenzly_backup_root/scenzly-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+scenzly_backup_dir="$scenzly_backup_root/visualy-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 mkdir "$scenzly_backup_dir"
 scenzly_temp_dir=$(mktemp -d)
 scenzly_was_running=false

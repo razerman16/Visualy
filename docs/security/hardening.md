@@ -1,3 +1,5 @@
+> **Mode actuel :** HTTP direct sans Caddy par défaut. Pour appliquer les protections HTTPS de ce guide, activer explicitement `--https`, `--ip` ou `--localhost`. Voir [la procédure](../https.md).
+
 # Correctifs de sécurité et migration
 
 Les dix constats de `review-2026-10-27.md` font l’objet de corrections dans cette version. Le rapport initial reste une photographie du commit audité, pas une description du code corrigé.
@@ -7,23 +9,23 @@ Les dix constats de `review-2026-10-27.md` font l’objet de corrections dans ce
 Prévoir une fenêtre de maintenance et une sauvegarde vérifiée. Ne jamais supprimer les volumes PostgreSQL ou médias pour appliquer cette mise à jour.
 
 1. Sur l’ancienne version, exécuter `sh scripts/backup.sh` et conserver la sauvegarde hors du serveur. Protéger également `.env` et les certificats Caddy existants.
-2. Récupérer le code : `git pull`. Lancer `sh scripts/init-env.sh` : les secrets existants restent inchangés et les secrets manquants sont générés, sans être affichés.
-3. Choisir si nécessaire les ports publics `CADDY_HTTP_PORT` (80 par défaut) et `CADDY_HTTPS_PORT` (443) dans `.env`, puis définir `ADMIN_DOMAIN` et `PLAYER_DOMAIN` (par défaut `admin.visualy.home.arpa` et `player.visualy.home.arpa`). Faire pointer ces deux noms DNS locaux vers le serveur. Si `172.30.240.0/24` chevauche le LAN/VPN, définir un autre `FRONTEND_SUBNET`, une plage dynamique `FRONTEND_DYNAMIC_RANGE` à l’intérieur de ce sous-réseau et une adresse `CADDY_IP` dans le sous-réseau mais hors de cette plage ; cette adresse doit être réservée à Caddy.
+2. Récupérer le code : `git pull`. Lancer `sh scripts/migrate-visualy.sh` pour sauvegarder et migrer le projet Docker existant, puis `sh scripts/init-env.sh` : les secrets existants restent inchangés et les secrets manquants sont générés, sans être affichés.
+3. Activer HTTPS avec `sh scripts/init-env.sh --https`. Choisir si nécessaire les ports publics `CADDY_HTTP_PORT` (80 par défaut) et `CADDY_HTTPS_PORT` (443) dans `.env`, puis définir `ADMIN_DOMAIN` et `PLAYER_DOMAIN` (par défaut `admin.visualy.home.arpa` et `player.visualy.home.arpa`). Faire pointer ces deux noms DNS locaux vers le serveur. Si `172.30.240.0/24` chevauche le LAN/VPN, définir un autre `FRONTEND_SUBNET`, une plage dynamique `FRONTEND_DYNAMIC_RANGE` à l’intérieur de ce sous-réseau et une adresse `CADDY_IP` dans le sous-réseau mais hors de cette plage ; cette adresse doit être réservée à Caddy.
 4. Exécuter `docker compose up -d --build --wait`. Le service ponctuel `migrate` crée le rôle limité `screnzly_app`, met à niveau le schéma et accorde les droits. Seul ce service reçoit les identifiants du propriétaire PostgreSQL. L’API refuse désormais un compte superadministrateur PostgreSQL. Les volumes existants et les comptes sont conservés.
-5. Exporter l’autorité locale avec `docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./screnzly-root.crt`, puis installer ce certificat comme autorité approuvée sur chaque poste/lecteur. Ne jamais distribuer `root.key`. Ouvrir les deux URL HTTPS et vérifier l’absence d’erreur de certificat.
+5. Exporter l’autorité locale avec `docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./visualy-root.crt`, puis installer ce certificat comme autorité approuvée sur chaque poste/lecteur. Ne jamais distribuer `root.key`. Ouvrir les deux URL HTTPS et vérifier l’absence d’erreur de certificat.
 6. Vérifier `docker compose ps`, la connexion, un import PDF/vidéo et la diffusion. `migrate` doit avoir terminé avec code 0 ; les autres services doivent être sains.
 
 Le passage de HTTP par IP à HTTPS par nom change l’origine du navigateur. Les préférences et caches ne sont pas transférés automatiquement ; reconnecter les administrateurs et jumeler à nouveau les lecteurs si nécessaire. Nettoyer les anciennes entrées d’écrans après vérification. Les anciennes sessions peuvent être révoquées depuis Paramètres.
 
 Pour une nouvelle installation seulement, saisir la valeur locale `SETUP_TOKEN` dans le formulaire de création du premier compte. Ne pas envoyer cette clé par URL ni la publier. Une base déjà initialisée refuse toute nouvelle initialisation.
 
-Les anciens paramètres `COOKIE_SECURE=false`, `ADMIN_PORT`, `PLAYER_PORT` n’exposent plus HTTP dans la configuration de production. `compose.https.yaml` est un override de compatibilité vide. Pour le développement seulement : `docker compose -f compose.yaml -f compose.dev.yaml up -d --build --wait`, accès exclusivement sur localhost.
+HTTP direct est désormais le mode par défaut (`ADMIN_PORT`/`PLAYER_PORT`). `compose.https.yaml` active Caddy, retire les ports HTTP directs et impose les cookies Secure. Le mode HTTP ne fournit pas la protection de transport de S01 ; choisir HTTPS pour la retrouver. Voir [la procédure actuelle](../https.md). Pour le développement seulement : `docker compose -f compose.yaml -f compose.dev.yaml up -d --build --wait`, accès exclusivement sur localhost.
 
 ## Protections par constat
 
 | Constat | Correction |
 | --- | --- |
-| S01 | Caddy HTTPS par défaut, cookies Secure, ports API/DB/conversion internes, HTTP local explicite seulement. |
+| S01 | Avec l’override HTTPS : Caddy, cookies Secure et retrait des ports HTTP directs. Sans override : HTTP LAN sans chiffrement. Ports API/DB/conversion internes dans tous les modes. |
 | S02 | Clé d’installation aléatoire obligatoire, verrou initial conservé, routes administratives absentes du proxy lecteur. |
 | S03 | Zod 4 corrigé, contrôle précoce des grandes collections, audit npm en CI. |
 | S04 | Migrations séparées, compte d’exécution sans superuser/DDL/création de rôles ; refus de démarrer avec un superuser. |
@@ -31,7 +33,7 @@ Les anciens paramètres `COOKIE_SECURE=false`, `ADMIN_PORT`, `PLAYER_PORT` n’e
 | S06 | Couleurs strictes et `backgroundColor`, CSP bloquant les images et connexions externes, y compris pour les anciennes scènes. |
 | S07 | En-têtes inclus explicitement dans chaque location Nginx, CSP et interdiction d’encadrement. |
 | S08 | Changement/réinitialisation de mot de passe, désactivation/réactivation, révocation de toutes les sessions, protection du dernier superadmin actif et interface Paramètres. |
-| S09 | Caddy écrase X-Real-IP ; Nginx ne fait confiance qu’à son IP réservée ; limites supplémentaires par compte/utilisateur/appareil. |
+| S09 | En HTTPS, Caddy écrase X-Real-IP et Nginx ne fait confiance qu’à son IP réservée ; en HTTP direct, Nginx utilise l’adresse de connexion ; limites supplémentaires par compte/utilisateur/appareil. |
 | S10 | Journal de sécurité distinct non modifiable par l’API, rétention de 90 jours via fonction restreinte ; événements lecteur à types limités et quotas par appareil. |
 
 Les changements de rôle et de mot de passe révoquent toutes les sessions du compte concerné. Les réinitialisations administratives exigent le mot de passe courant du superadministrateur. Le changement personnel déconnecte toutes les sessions et exige une nouvelle connexion.

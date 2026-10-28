@@ -1,5 +1,5 @@
-# Keep this project name stable: it owns the existing database, media and Caddy volumes.
-name: scenzly
+# Existing installations: run scripts/migrate-visualy.sh before starting this project.
+name: visualy
 x-api-build: &api-build
   context: .
   dockerfile: docker/Dockerfile
@@ -49,7 +49,7 @@ services:
       CONVERTER_URL: http://converter:3001
       CONVERTER_TOKEN: ${CONVERTER_TOKEN:?Executez sh scripts/init-env.sh}
       SETUP_TOKEN: ${SETUP_TOKEN:?Executez sh scripts/init-env.sh}
-      COOKIE_SECURE: "true"
+      COOKIE_SECURE: "false"
       MEDIA_QUOTA_MB: ${MEDIA_QUOTA_MB:-10240}
       NODE_ENV: production
     volumes:
@@ -99,11 +99,13 @@ services:
     init: true
 
   admin-web:
+    ports:
+      - "${BIND_ADDRESS:-0.0.0.0}:${ADMIN_PORT:-8080}:80"
     build:
       <<: *api-build
       target: admin
     environment:
-      TRUSTED_PROXY_IP: ${CADDY_IP:-172.30.240.2}
+      TRUSTED_PROXY_IP: 127.0.0.1
     networks: [frontend, backend]
     depends_on:
       api:
@@ -119,11 +121,13 @@ services:
     restart: unless-stopped
 
   player-web:
+    ports:
+      - "${BIND_ADDRESS:-0.0.0.0}:${PLAYER_PORT:-8081}:80"
     build:
       <<: *api-build
       target: player
     environment:
-      TRUSTED_PROXY_IP: ${CADDY_IP:-172.30.240.2}
+      TRUSTED_PROXY_IP: 127.0.0.1
     networks: [frontend, backend]
     depends_on:
       api:
@@ -138,39 +142,6 @@ services:
     security_opt: [no-new-privileges:true]
     restart: unless-stopped
 
-  caddy:
-    image: caddy:2.10-alpine
-    ports:
-      - "${BIND_ADDRESS:-0.0.0.0}:${CADDY_HTTP_PORT:-80}:80"
-      - "${BIND_ADDRESS:-0.0.0.0}:${CADDY_HTTPS_PORT:-443}:443"
-    environment:
-      HTTP_PROXY: ""
-      HTTPS_PROXY: ""
-      http_proxy: ""
-      https_proxy: ""
-      ALL_PROXY: ""
-      all_proxy: ""
-      NO_PROXY: "*"
-      no_proxy: "*"
-      CADDY_HTTPS_PORT: ${CADDY_HTTPS_PORT:-443}
-      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.visualy.home.arpa}
-      PLAYER_DOMAIN: ${PLAYER_DOMAIN:-player.visualy.home.arpa}
-    networks:
-      frontend:
-        ipv4_address: ${CADDY_IP:-172.30.240.2}
-    volumes:
-      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      admin-web:
-        condition: service_healthy
-      player-web:
-        condition: service_healthy
-    mem_limit: 256m
-    pids_limit: 100
-    security_opt: [no-new-privileges:true]
-    restart: unless-stopped
 
 networks:
   frontend:
@@ -186,6 +157,10 @@ networks:
     internal: true
 volumes:
   postgres18-data:
+    name: ${VOLUME_PREFIX:-${COMPOSE_PROJECT_NAME}}_postgres18-data
   media-data:
+    name: ${VOLUME_PREFIX:-${COMPOSE_PROJECT_NAME}}_media-data
   caddy-data:
+    name: ${VOLUME_PREFIX:-${COMPOSE_PROJECT_NAME}}_caddy-data
   caddy-config:
+    name: ${VOLUME_PREFIX:-${COMPOSE_PROJECT_NAME}}_caddy-config

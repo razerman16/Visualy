@@ -1,96 +1,104 @@
-> **Mise à jour sécurité :** HTTPS est maintenant le mode par défaut. Avant de mettre à jour une installation existante, suivre [la procédure de migration](security/hardening.md). Les anciens réglages `COOKIE_SECURE=false`, `ADMIN_PORT` et `PLAYER_PORT` ne réactivent pas HTTP en production.
-
 # Déploiement et exploitation sur un réseau local
 
-## Passage de Screnzly à Visualy
+Visualy démarre en **HTTP direct, sans Caddy**. Le mode HTTPS est optionnel : [procédure Caddy](https.md). Les ports HTTP sont `ADMIN_PORT=8080` et `PLAYER_PORT=8081` par défaut.
 
-Le changement de nom porte sur les interfaces, les logos, les traductions et les packages npm (`@visualy/*`). Mettez à jour le code puis reconstruisez les images avec `docker compose up -d --build --wait`, selon la procédure de mise à jour ci-dessous. Conservez votre `.env` : `scripts/init-env.sh` préserve les domaines et les ports déjà renseignés.
+## Variables et premier démarrage
 
-Les identifiants persistants restent volontairement compatibles : projet Compose `scenzly`, volumes, base PostgreSQL, rôle `screnzly_app`, cookie de session, clés navigateur, métadonnées des médias hors connexion et format des sauvegardes. Ne renommez pas le projet Compose et ne supprimez pas ses volumes pour changer la marque. Les comptes, les médias, les jumelages et les préférences restent utilisables à la même adresse. Les rapports de sécurité datés conservent leur nom historique.
+```sh
+sh scripts/init-env.sh
+# Modifier ADMIN_PORT et PLAYER_PORT dans .env si nécessaire.
+docker compose up -d --build --wait
+docker compose ps -a
+```
 
-Les nouvelles installations proposent `admin.visualy.home.arpa` et `player.visualy.home.arpa`. Une installation existante peut garder ses anciens domaines et afficher Visualy. Changer aussi le domaine ou le port HTTPS change l’origine navigateur : prévoir une nouvelle connexion, un nouveau jumelage et une synchronisation du cache sur chaque écran concerné. Le nouveau logo hors connexion est disponible après une connexion au serveur mis à jour ; les médias déjà en cache sont conservés.
+Ouvrir `http://IP_DU_SERVEUR:8080` et `http://IP_DU_SERVEUR:8081`. Aucune adresse à déclarer, aucun DNS ou certificat à installer. Sur le serveur Docker, `localhost` fonctionne aussi. Utiliser `SETUP_TOKEN` de `.env` pour créer le premier administrateur. Le service `migrate` doit terminer avec code 0.
+
+| Variable | Valeur initiale | Utilisation |
+| --- | --- | --- |
+| `ADMIN_PORT` | `8080` | Administration HTTP directe |
+| `PLAYER_PORT` | `8081` | Lecteur HTTP direct |
+| `BIND_ADDRESS` | `0.0.0.0` | Interfaces IPv4 publiées |
+| `POSTGRES_PASSWORD` | aléatoire | Mot de passe du propriétaire PostgreSQL |
+| `APP_DB_PASSWORD` | aléatoire, 64 caractères hexadécimaux | Compte API à droits limités |
+| `SETUP_TOKEN` | aléatoire | Clé de création du premier compte |
+| `CONVERTER_TOKEN` | aléatoire | Authentification du convertisseur |
+| `MEDIA_QUOTA_MB` | `10240` | Quota média avec réservations d’import |
+| `CADDY_HTTP_PORT` / `CADDY_HTTPS_PORT` | `80` / `443` | Mode HTTPS uniquement |
+| `CADDY_PLAYER_HTTPS_PORT` | `8443` | Lecteur HTTPS par IP |
+| `ADMIN_DOMAIN` / `PLAYER_DOMAIN` | `admin.visualy.home.arpa` / `player.visualy.home.arpa` | Noms pour HTTPS optionnel |
+| `LOCAL_PLAYER_HTTPS_PORT` | `8443` | Lecteur HTTPS localhost |
+| `DEV_ADMIN_PORT` / `DEV_PLAYER_PORT` | `8080` / `8081` | Override de développement, localhost uniquement |
+
+Le script préserve les secrets et le mode existants. Pour revenir explicitement à HTTP après une ancienne configuration Caddy :
+
+```sh
+sh scripts/init-env.sh --http
+docker compose up -d --build --remove-orphans --wait
+```
+
+Cela retire l’ancien conteneur Caddy, sans supprimer ses volumes. Ne pas remplacer `POSTGRES_PASSWORD` d’une base déjà initialisée : modifier `.env` ne modifie pas le mot de passe enregistré dans PostgreSQL. Une rotation demande une modification du rôle dans la base.
 
 ## Architecture
 
 ```text
-Navigateurs → HTTPS :443 Caddy → admin-web / player-web → API → PostgreSQL
-                                                        ├→ volume médias
-                                                        └→ convertisseur isolé
+HTTP par défaut : navigateurs → admin-web / player-web → API → PostgreSQL
+HTTPS optionnel : navigateurs → Caddy → admin-web / player-web → API
+                                                               └→ convertisseur isolé
 ```
 
-Seuls les ports web sont publiés. Les fichiers et données sont conservés dans les volumes Docker `scenzly_media-data` et `scenzly_postgres18-data`. `docker compose down` préserve ces volumes ; `docker compose down -v` les supprime. Les conteneurs redémarrent automatiquement avec Docker, sauf s’ils ont été arrêtés explicitement.
+Seuls les services web sont exposés. L’API, PostgreSQL et le convertisseur restent internes. Les volumes `visualy_postgres18-data` et `visualy_media-data` conservent les données des nouvelles installations. Une installation migrée réutilise ses volumes `scenzly_*` via `VOLUME_PREFIX=scenzly`. `docker compose down` conserve les volumes ; `down -v` les supprime.
 
-Ne créez pas de redirection de ports sur votre box pour une installation LAN. Autorisez les ports choisis dans le pare-feu du serveur uniquement pour le réseau des administrateurs et des écrans. Réservez une adresse DHCP fixe au serveur. L’application ne configure pas le réseau ou le démarrage kiosque à la place de votre système.
+HTTP convient à un réseau local de confiance et ne chiffre pas les identifiants ni les médias. Les sessions conservent HttpOnly et SameSite=Strict ; Secure est activé uniquement par les overrides HTTPS. Le cache persistant des lecteurs distants nécessite HTTPS approuvé. Autoriser les ports choisis dans le pare-feu LAN du serveur ; aucune redirection sur la box n’est nécessaire.
 
-## Variables et premier démarrage
+## Choisir les ports dans `.env`
 
-Le script `sh scripts/init-env.sh` génère `.env` sans afficher son secret. Variables prises en charge :
+Pour HTTP :
 
-| Variable | Valeur initiale | Utilisation |
-| --- | --- | --- |
-| `POSTGRES_PASSWORD` | aléatoire, 64 caractères hexadécimaux | Compte PostgreSQL interne |
-| `CADDY_HTTP_PORT` | `80` | Port HTTP public et redirection HTTPS |
-| `CADDY_HTTPS_PORT` | `443` | Port HTTPS public de Caddy |
-| `DEV_ADMIN_PORT` / `DEV_PLAYER_PORT` | `8080` / `8081` | Ports locaux avec `compose.dev.yaml` uniquement |
-| `BIND_ADDRESS` | `0.0.0.0` | Adresse d’écoute des ports publiés ; choisir l’IP LAN pour restreindre l’interface |
-| `APP_DB_PASSWORD` | aléatoire, 64 caractères hexadécimaux | Compte applicatif à droits limités |
-| `SETUP_TOKEN` | aléatoire | Clé de création du premier compte |
-| `CONVERTER_TOKEN` | aléatoire | Authentification interne du convertisseur |
-| `MEDIA_QUOTA_MB` | `10240` | Quota média avec réservations d’import |
-| `ADMIN_DOMAIN` | `admin.visualy.home.arpa` | Nom DNS local HTTPS |
-| `PLAYER_DOMAIN` | `player.visualy.home.arpa` | Nom DNS local HTTPS |
-
-Le mot de passe est incorporé dans une URL PostgreSQL : utilisez le script ou une valeur hexadécimale. Modifier `.env` après initialisation ne modifie pas le mot de passe de la base déjà créée. Une rotation nécessite aussi `ALTER ROLE` dans PostgreSQL, puis une recréation du conteneur API ; ne supprimez pas les volumes pour changer un mot de passe.
-
-```sh
-docker compose up -d --build --wait
-docker compose ps
-docker compose logs --tail 100 api
+```dotenv
+ADMIN_PORT=8080
+PLAYER_PORT=8081
 ```
 
-Le service ponctuel `migrate` met à niveau le schéma avant le démarrage de l’API. Sa sonde `/api/v1/health` vérifie également la connexion à PostgreSQL. Créez le premier administrateur depuis le portail avec la clé `SETUP_TOKEN` disponible localement dans `.env`. Le mot de passe du compte doit comporter au moins 12 caractères.
+Les deux ports doivent être distincts et libres. Après modification, `docker compose up -d --wait` applique les changements ; un simple `restart` ne suffit pas. Ne pas utiliser `CADDY_IP` comme adresse du site : elle appartient au réseau interne Docker.
+
+Pour HTTPS, configurer les ports Caddy selon [la procédure dédiée](https.md). Les ports HTTP directs sont alors retirés automatiquement. Une modification du mode, du nom ou du port change l’origine navigateur : se reconnecter et jumeler sur la nouvelle adresse.
 
 ## HTTPS local et cache hors connexion
 
-1. Configurez dans le DNS local (routeur, Pi-hole, serveur DNS interne) les noms `admin.visualy.home.arpa` et `player.visualy.home.arpa` vers l’IP LAN du serveur. À défaut, ajoutez les entrées aux fichiers hosts des postes qui le permettent. Les deux noms doivent être résolus par chaque écran.
-2. Démarrez la configuration HTTPS par défaut :
+Suivre [la procédure HTTPS avec Caddy](https.md). Choisir `--https` pour des noms DNS, `--ip` pour l’IP existante, ou `--localhost` pour un test sur la machine Docker. Installer la racine publique Caddy sur chaque client. Préserver les volumes Caddy et ne jamais distribuer `root.key`.
 
-   ```sh
-   docker compose up -d --build --wait
-   ```
+Un navigateur ayant déjà visité le site en HTTPS peut mémoriser HSTS et forcer HTTPS après retour à HTTP. Voir [le retour à HTTP](https.md#switching-from-an-earlier-caddy-installation-back-to-http). Ne pas confondre cette redirection du navigateur avec un conteneur Caddy encore actif.
 
-   Seul Caddy publie les ports 80/443. Caddy redirige HTTP vers HTTPS et émet les certificats avec sa propre autorité locale ; aucun service ACME public n’est utilisé.
-3. Exportez uniquement le certificat public racine :
+## Accéder directement par l’IP du serveur
 
-   ```sh
-   docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ../scenzly-root.crt
-   ```
+Le mode par défaut le permet sans détection : `http://IP_DU_SERVEUR:ADMIN_PORT` et `http://IP_DU_SERVEUR:PLAYER_PORT`. Pour HTTPS par IP, utiliser `sh scripts/init-env.sh --ip` et suivre [le guide](https.md#existing-server-ip-without-dns). Sous WSL/Docker Desktop, vérifier l’IP LAN du système hôte.
 
-4. Installez ce certificat dans le magasin des autorités de confiance de chaque poste/écran et du navigateur lorsqu’il utilise son propre magasin. Sous Windows, utilisez le magasin « Autorités de certification racines de confiance ». Sous Linux, utilisez le mécanisme de votre distribution et vérifiez aussi le magasin Chromium/Firefox. Les bornes Android/TV doivent permettre l’installation d’une autorité approuvée ; qualifiez le matériel avant déploiement.
-5. Ouvrez `https://admin.visualy.home.arpa` et `https://player.visualy.home.arpa` sans avertissement de certificat. Les cookies de l’administration deviennent sécurisés. Le lecteur peut alors enregistrer son Service Worker et ses médias locaux. Un changement d’origine HTTP→HTTPS exige un nouveau jumelage sur le nouvel emplacement.
+## Tester en HTTPS sur localhost
 
-Ignorer un avertissement de certificat ne constitue pas une configuration fiable pour le cache. Le cache reste soumis à l’espace disque et aux politiques du navigateur ; attendez la fin de la synchronisation puis testez une coupure réseau et un redémarrage sur chaque modèle d’écran. Les ressources externes ne sont pas garanties hors ligne.
+Utiliser `sh scripts/init-env.sh --localhost`, puis suivre [la procédure localhost](https.md#localhost). HTTP sur localhost fonctionne également avec la configuration de base et ses ports 8080/8081.
 
-Conservez les volumes `caddy-data` et `caddy-config` pour garder l’autorité locale après redémarrage. Si vous migrez le serveur, sauvegardez-les de façon protégée : `caddy-data` contient une clé privée. Le script de sauvegarde applicatif ci-dessous ne copie pas ces volumes.
+## Passage de Screnzly à Visualy
 
-Le mode de développement HTTP exige explicitement `docker compose -f compose.yaml -f compose.dev.yaml up -d --build --wait` et n’écoute que sur localhost. Ne pas l’utiliser pour un déploiement LAN.
+Le nom et les packages deviennent Visualy ; le projet Docker devient `visualy` ; exécuter `sh scripts/migrate-visualy.sh` avant le premier démarrage sur une installation `scenzly`. Le script sauvegarde les données, arrête l’ancien projet et configure la réutilisation de ses volumes. La base, le rôle `screnzly_app`, les cookies, les clés navigateur et le format des sauvegardes restent compatibles. Conserver `.env`, secrets et volumes. Ne pas changer simplement le nom du projet sans cette migration : Docker pourrait créer des volumes vides.
+
+Les rapports de sécurité datés décrivent la version examinée à leur date ; le mode HTTP actuel est un choix de déploiement distinct. Pour les protections de transport, utiliser le mode HTTPS décrit dans [le durcissement](security/hardening.md).
 
 ## Sauvegarder
 
 ```sh
 sh scripts/backup.sh
 # Ou un emplacement specifique :
-sh scripts/backup.sh /chemin/protege/scenzly-backups
+sh scripts/backup.sh /chemin/protege/visualy-backups
 ```
 
 Le script arrête temporairement l’API, lance `pg_dump` au format PostgreSQL personnalisé, copie les fichiers du volume médias et calcule leurs sommes SHA-256. Il redémarre l’API s’il l’avait trouvée active, même après erreur. Les écrans déjà synchronisés peuvent continuer à lire leur cache. Aucun arrêt de PostgreSQL n’est nécessaire.
 
-Chaque dossier contient `database.dump`, `media.tar.gz`, `checksums.sha256` et `FORMAT`. Un dossier sans `FORMAT` correspond à une sauvegarde incomplète. Copiez uniquement les sauvegardes réussies vers un autre disque ou un NAS et appliquez votre politique de rétention. Le dossier par défaut est à côté du dépôt, dans `../scenzly-backups`. Protégez séparément `.env` et, le cas échéant, les volumes Caddy.
+Chaque dossier contient `database.dump`, `media.tar.gz`, `checksums.sha256` et `FORMAT`. Un dossier sans `FORMAT` correspond à une sauvegarde incomplète. Copiez uniquement les sauvegardes réussies vers un autre disque ou un NAS et appliquez votre politique de rétention. Le dossier par défaut est à côté du dépôt, dans `../visualy-backups`. Protégez séparément `.env` et, le cas échéant, les volumes Caddy.
 
 Exemple cron quotidien, après adaptation des chemins et redirection des logs vers un emplacement protégé :
 
 ```cron
-0 3 * * * cd /srv/scenzly && sh scripts/backup.sh /mnt/sauvegardes/scenzly >> /var/log/scenzly-backup.log 2>&1
+0 3 * * * cd /srv/visualy && sh scripts/backup.sh /mnt/sauvegardes/visualy >> /var/log/visualy-backup.log 2>&1
 ```
 
 ## Restaurer
@@ -125,7 +133,7 @@ HTTPS est inclus dans la configuration normale. Ne lancez pas `down -v`. Pour re
 
 ## Réseau isolé
 
-Sur une machine de préparation connectée, construisez les quatre images Visualy (API, convertisseur, administration, lecteur) et récupérez l’image PostgreSQL et Caddy. Exportez-les avec `docker image save`, transférez l’archive et rechargez-la avec `docker image load` sur le serveur local. Conservez les mêmes noms d’images et démarrez avec `docker compose up -d --no-build --wait`. La synchronisation et les médias restent ensuite sur le LAN ; aucun compte externe n’est requis.
+Sur une machine de préparation connectée, construisez les quatre images Visualy (API, convertisseur, administration, lecteur) et récupérez l’image PostgreSQL (et Caddy si HTTPS est activé). Exportez-les avec `docker image save`, transférez l’archive et rechargez-la avec `docker image load` sur le serveur local. Conservez les mêmes noms d’images et démarrez avec `docker compose up -d --no-build --wait`. La synchronisation et les médias restent ensuite sur le LAN ; aucun compte externe n’est requis.
 
 ## Diagnostic
 
@@ -139,98 +147,3 @@ Sur une machine de préparation connectée, construisez les quatre images Visual
 Ne publiez pas les journaux complets ou les sauvegardes : ils peuvent contenir des données internes. Les journaux nginx omettent volontairement la chaîne de requête, qui peut transporter un jeton de lecteur.
 
 Pour migrer une installation PostgreSQL 17, suivre la section PostgreSQL 18 du README avant tout redémarrage avec le nouveau fichier Compose. Le volume 17 ne doit jamais être monté directement dans PostgreSQL 18.
-
-## Choisir les ports dans `.env`
-
-Les ports publics de Caddy sont configurables sans modifier les fichiers Compose :
-
-```dotenv
-BIND_ADDRESS=0.0.0.0
-CADDY_HTTP_PORT=8088
-CADDY_HTTPS_PORT=8443
-ADMIN_DOMAIN=admin.visualy.home.arpa
-PLAYER_DOMAIN=player.visualy.home.arpa
-```
-
-L’administration est alors accessible à `https://admin.visualy.home.arpa:8443` et le lecteur à `https://player.visualy.home.arpa:8443`. Les adresses HTTP sur le port 8088 redirigent vers HTTPS sur le port 8443, en conservant le chemin et les paramètres. Caddy écoute toujours sur 80/443 à l’intérieur du conteneur. Les deux interfaces partagent les ports publics et se distinguent par leur nom DNS. Les noms `ADMIN_DOMAIN` et `PLAYER_DOMAIN` ne doivent contenir ni `https://` ni port.
-
-Choisir deux ports TCP libres, distincts, entre 1 et 65535, et autoriser ces ports dans le pare-feu LAN. Pour les ports standard, conserver `CADDY_HTTP_PORT=80` et `CADDY_HTTPS_PORT=443` ; le suffixe `:443` peut être omis dans les URL HTTPS.
-
-Après modification :
-
-```sh
-docker compose config --quiet
-docker compose up -d --no-deps caddy
-```
-
-Un simple `docker compose restart caddy` ne recharge pas les publications de ports ni les variables d’environnement. Si le code ou les images ont également changé, suivre la procédure complète de mise à jour. Utiliser directement la nouvelle URL HTTPS ; un changement de port HTTPS change l’origine du navigateur et peut demander une reconnexion et un nouveau jumelage. Une politique HSTS déjà mémorisée peut également forcer HTTPS sur une ancienne adresse HTTP.
-
-Pour le mode de développement local, `DEV_ADMIN_PORT` (8080 par défaut) et `DEV_PLAYER_PORT` (8081) configurent les ports HTTP uniquement avec `compose.dev.yaml`. Ils restent liés à `127.0.0.1`. Les ports internes API/PostgreSQL/convertisseur restent privés.
-
-### Préparer les secrets
-
-Exécuter `sh scripts/init-env.sh` sur le serveur : les secrets manquants sont générés et les réglages réseau manquants sont ajoutés, sans remplacer les valeurs existantes. Si le journal affiche `Converter token required`, vérifier que `CONVERTER_TOKEN` contient le secret généré (au moins 32 caractères). Pour `APP_DB_PASSWORD must contain 64 hexadecimal characters`, la valeur `APP_DB_PASSWORD` doit contenir exactement 64 caractères parmi `0-9` et `a-f`.
-
-Une valeur déjà renseignée mais invalide est conservée par le script. Pour la régénérer, sauvegarder `.env`, retirer uniquement la ligne invalide `APP_DB_PASSWORD` ou `CONVERTER_TOKEN`, puis relancer `sh scripts/init-env.sh` et `docker compose up -d --wait`. Le service de migration applique le nouveau mot de passe applicatif et les services API/convertisseur reprennent leur secret commun. Ne pas supprimer ni remplacer `POSTGRES_PASSWORD` d’une base existante par cette méthode.
-
-## Tester en HTTPS sur localhost
-
-Avec Docker Compose **2.24.4 ou plus récent**, ajouter ces lignes dans `.env` :
-
-```dotenv
-COMPOSE_PATH_SEPARATOR=|
-COMPOSE_FILE=compose.yaml|compose.localhost.yaml
-CADDY_HTTP_PORT=80
-CADDY_HTTPS_PORT=443
-LOCAL_PLAYER_HTTPS_PORT=8443
-```
-
-Le séparateur explicite `|` rend cette sélection compatible avec Linux, macOS et Windows. Ne pas combiner ce mode avec `compose.dev.yaml`. Les ports doivent être libres et distincts. `ADMIN_DOMAIN`, `PLAYER_DOMAIN` et `BIND_ADDRESS` ne sont pas utilisés par ce mode : les ports sont publiés uniquement sur `127.0.0.1`.
-
-```sh
-docker compose config --quiet
-docker compose up -d --build --wait
-docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./visualy-root.crt
-```
-
-Installer `visualy-root.crt` comme autorité racine de confiance dans le système/navigateur, puis ouvrir **https://localhost** pour l’administration et **https://localhost:8443** pour le lecteur. Aucun DNS ni fichier hosts à modifier. `http://localhost` redirige vers le port HTTPS de l’administration ; si vous changez les ports, les indiquer dans les URL. Le certificat local reste nécessaire, même sur localhost. Ne pas distribuer la clé privée de Caddy.
-
-Le navigateur doit être sur la machine Docker : depuis un autre poste, localhost désigne cet autre poste. Pour des écrans sur le réseau, utiliser le mode par domaines documenté plus haut.
-
-Les données et secrets restent dans les mêmes volumes. Chaque port HTTPS définit une origine distincte : administration et lecteur ont chacun leur cache et leurs préférences. Un passage depuis les anciens domaines exige une nouvelle connexion et un nouveau jumelage sur localhost. Pour revenir au mode réseau, retirer les deux lignes `COMPOSE_*` et relancer `docker compose up -d --wait` ; les domaines existants du `.env` seront repris.
-
-## Accéder directement par l’IP du serveur
-
-Ce mode utilise **l’adresse IPv4 déjà attribuée au serveur**. Il ne modifie pas la configuration réseau de la machine. Caddy publie l’administration et le lecteur sur deux ports HTTPS distincts ; les noms DNS configurés restent aussi accessibles sur le port HTTPS principal.
-
-Sur le serveur Docker, activer le mode une seule fois :
-
-```sh
-sh scripts/init-env.sh --ip
-```
-
-Le script détecte l’adresse source de la route IPv4 par défaut, sans envoyer de requête réseau, puis inscrit `SERVER_IP` et la sélection `compose.yaml|compose.ip.yaml` dans `.env`. Il préserve les secrets, les domaines et les ports existants. Il remplace la sélection du mode localhost si elle était active. Docker Compose 2.24.4 minimum est nécessaire.
-
-Choisir les ports dans `.env`, par exemple :
-
-```dotenv
-CADDY_HTTP_PORT=80
-CADDY_HTTPS_PORT=443
-CADDY_PLAYER_HTTPS_PORT=8443
-```
-
-Puis appliquer :
-
-```sh
-docker compose config --quiet
-docker compose up -d --build --wait
-docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./visualy-root.crt
-```
-
-Si l’IP affichée par le script est `192.168.1.50`, ouvrir **https://192.168.1.50** pour l’administration et **https://192.168.1.50:8443** pour le lecteur. Installer le certificat racine Caddy sur chaque poste/écran pour que le navigateur valide HTTPS et permette le cache hors connexion. Aucun fichier hosts ou DNS n’est nécessaire pour ces adresses.
-
-`BIND_ADDRESS=0.0.0.0` publie les ports sur les interfaces IPv4 du serveur ; `SERVER_IP` sert à identifier son adresse dans le certificat, sans attribuer une nouvelle IP. `CADDY_IP` et `FRONTEND_SUBNET` concernent uniquement le réseau interne Docker. Les trois ports publics doivent être libres et distincts.
-
-La détection fonctionne sur Linux (`ip`) et macOS (`route`/`ipconfig`). Vérifier l’adresse affichée si le serveur a plusieurs interfaces, un VPN, ou tourne dans WSL/une VM : dans ces cas, renseigner au besoin `SERVER_IP` avec l’adresse LAN existante réellement utilisée par les clients. Si la détection échoue, le script s’arrête avant d’activer ce mode. Une valeur `SERVER_IP` déjà définie est conservée. Après un changement d’adresse du serveur, mettre cette valeur à jour et recréer Caddy avec `docker compose up -d --no-deps caddy`.
-
-Pour ajouter des noms propres ensuite, définir `ADMIN_DOMAIN` et `PLAYER_DOMAIN` dans `.env`, créer leurs entrées DNS vers l’IP du serveur et recréer Caddy. Les deux noms utilisent `CADDY_HTTPS_PORT`, tandis que l’accès direct du lecteur par IP utilise `CADDY_PLAYER_HTTPS_PORT`. Le passage IP → DNS change l’origine navigateur : prévoir une nouvelle connexion et un jumelage sur la nouvelle adresse. Conserver le mode IP permet les deux accès en parallèle.

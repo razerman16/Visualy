@@ -1,4 +1,4 @@
-/** Integration smoke test against a disposable Scenzly installation.
+/** Integration smoke test against a disposable Visualy installation.
  * Run: SCENZLY_TEST_URL=http://127.0.0.1:8080 node tests/smoke.mjs
  * Creates data. First run bootstraps an admin; retain credentials in environment
  * to repeat against that installation. Never target production.
@@ -72,7 +72,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQ
 const upload = new FormData();upload.append('file',new Blob([png],{type:'image/png'}),'recette.png');
 const media = await req('/media',{method:'POST',body:upload});
 assert.equal(media.mime,'image/png');assert.match(media.checksum,/^[0-9a-f]{64}$/);
-const scene = await req('/scenes',{method:'POST',body:{name:'Scène de recette',width:1920,height:1080,background:'#102030',elements:[{id:randomUUID(),type:'text',x:20,y:20,width:800,height:100,text:'Bonjour Scenzly',fontSize:64,color:'#ffffff'},{id:randomUUID(),type:'image',x:20,y:200,width:100,height:100,mediaId:media.id}]}});
+const scene = await req('/scenes',{method:'POST',body:{name:'Scène de recette',width:1920,height:1080,background:'#102030',elements:[{id:randomUUID(),type:'text',x:20,y:20,width:800,height:100,text:'Bonjour Visualy',fontSize:64,color:'#ffffff'},{id:randomUUID(),type:'image',x:20,y:200,width:100,height:100,mediaId:media.id}]}});
 const program = await req('/programs',{method:'POST',body:{name:'Programme de recette',items:[{id:randomUUID(),type:'scene',refId:scene.id,duration:5}]}});
 await req(`/programs/${program.id}/publish`,{method:'POST'});
 const group = await req('/groups',{method:'POST',body:{name:'Groupe recette'}});
@@ -85,12 +85,12 @@ const paired = await req(`/players/pair/status/${pairing.requestId}?deviceId=${d
 const token = paired.token;
 await req(`/screens/${screen.id}`,{method:'PATCH',body:{fallbackProgramId:program.id,orientation:'landscape'}});
 const manifest = await req('/players/me/manifest',{auth:token});
-assert.equal(manifest.fallbackProgramId,program.id);assert.equal(manifest.programs[0].scenes[0].elements[0].text,'Bonjour Scenzly');
+assert.equal(manifest.fallbackProgramId,program.id);assert.equal(manifest.programs[0].scenes[0].elements[0].text,'Bonjour Visualy');
 await req('/media',{auth:token,status:401});
 const bytes = await req(`/media/${media.id}/file`,{auth:token,raw:true});assert.equal(bytes.byteLength,png.length);
 await req(`/media/${media.id}/file`,{auth:null,status:401});
 await req(`/scenes/${scene.id}`,{method:'PUT',body:{...scene,elements:[{...scene.elements[0],text:'Brouillon non publié'},scene.elements[1]]}});
-const immutable = await req('/players/me/manifest',{auth:token});assert.equal(immutable.programs[0].scenes[0].elements[0].text,'Bonjour Scenzly');
+const immutable = await req('/players/me/manifest',{auth:token});assert.equal(immutable.programs[0].scenes[0].elements[0].text,'Bonjour Visualy');
 const scheduleData = {name:'Matin',programId:program.id,screenId:screen.id,groupId:null,priority:10,kind:'weekly',startDate:'2026-01-01',endDate:'2027-12-31',startTime:'08:00',endTime:'12:00',days:[1,2,3,4,5],exclusions:[],timezone:'Europe/Paris'};
 await req('/schedules',{method:'POST',body:scheduleData});
 await req('/schedules',{method:'POST',body:{...scheduleData,name:'Conflit'},status:409});

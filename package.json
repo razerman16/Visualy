@@ -13,7 +13,8 @@
     "dev:admin": "npm run dev -w @visualy/admin",
     "dev:player": "npm run dev -w @visualy/player",
     "test:smoke": "node tests/smoke.mjs",
-    "test:security": "tsx --test tests/security/*.test.ts"
+    "test:security": "tsx --test tests/security/*.test.ts",
+    "test:deployment": "node tests/deployment-config.mjs && node --test tests/deployment-scripts.test.mjs"
   },
   "engines": {
     "node": ">=22"

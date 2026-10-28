@@ -18,119 +18,94 @@ Visualy includes an administration app, a full-screen browser player, an API, Po
 - Schedule dated or recurring campaigns and monitor player activity.
 - Switch between English and French, with light, dark, and system themes.
 - Play cached content offline after synchronization over trusted HTTPS.
-- Access the server directly by IP, through local DNS names, or on localhost.
+- Start directly over HTTP by IP, with optional Caddy HTTPS by IP, DNS, or localhost.
+
+## Upgrading an existing Docker installation
+
+Docker now displays **visualy** as the project and image name. Before starting this version on an existing `scenzly` installation, run:
+
+```sh
+sh scripts/migrate-visualy.sh
+```
+
+The script backs up the old installation, stops its containers, and records `COMPOSE_PROJECT_NAME=visualy` and `VOLUME_PREFIX=scenzly` in `.env`. The new containers reuse the same database, media, and Caddy certificate volumes. It refuses unexpected volume layouts or an already existing `visualy` project instead of combining data. With no old project, it does nothing. Keep the generated backup and use the selected startup procedure below. Internal database roles, browser keys, and backup formats retain compatible identifiers.
 
 ## Requirements
 
 - Docker Engine with Docker Compose, or Docker Desktop using Linux containers on Windows/macOS.
-- **Docker Compose 2.24.4 or later** for the IP and localhost modes.
+- **Docker Compose 2.24.4 or later** for the HTTPS and development overrides.
 - A suggested starting point of 4 CPU cores, 6 GB RAM, and enough storage for your media.
 - A browser on each playback device. Video performance depends on the device and its supported codecs.
 
-Run shell scripts through a POSIX shell; on Windows, use WSL or Git Bash. IP detection may need adjustment when run inside WSL, a VM, or a host with multiple interfaces or a VPN.
+Run shell scripts through a POSIX shell; on Windows, use WSL or Git Bash. Optional HTTPS IP detection may need adjustment inside WSL, a VM, or a host with multiple interfaces or a VPN. Plain HTTP needs no detection.
 
-## Quick start: use your server's existing IP address
+## Quick start: HTTP on your local network
 
-Clone the repository and initialize the configuration **on the Docker host**:
+No Caddy, DNS, certificate, or IP detection is needed for the default deployment.
 
 ```sh
 git clone https://github.com/razerman16/Visualy.git
 cd Visualy
-sh scripts/init-env.sh --ip
+sh scripts/init-env.sh
 ```
 
-The script generates missing secrets, detects the server's existing IPv4 address, and selects the IP-based Compose configuration. It does not assign a new IP address or change the host's network settings. Existing secrets, domains, and port settings are preserved. Do not commit `.env`.
-
-Check the detected `SERVER_IP` in `.env`. On hosts with multiple interfaces, a VPN, or WSL, set it to the server's actual LAN address if necessary. If detection fails, set `SERVER_IP` to that existing address and run the command again.
-
-Choose your public ports in `.env`:
+Choose the direct HTTP ports in `.env`:
 
 ```dotenv
-CADDY_HTTP_PORT=80
-CADDY_HTTPS_PORT=443
-CADDY_PLAYER_HTTPS_PORT=8443
+BIND_ADDRESS=0.0.0.0
+ADMIN_PORT=8080
+PLAYER_PORT=8081
 ```
 
-Then start the stack:
+Start the stack:
 
 ```sh
-docker compose config --quiet
 docker compose up -d --build --wait
 docker compose ps -a
 ```
 
-The one-time `migrate` service should finish with exit code `0`. Other services should remain running.
-
-For a server at `192.168.1.50`, the default addresses are:
+For a server at `192.168.1.50`, open:
 
 | Application | URL |
 | --- | --- |
-| Administration | `https://192.168.1.50` |
-| Player | `https://192.168.1.50:8443` |
+| Administration | `http://192.168.1.50:8080` |
+| Player | `http://192.168.1.50:8081` |
 
-HTTP redirects to the administration HTTPS port. If you choose different ports, include them in the URLs. Use distinct, available ports.
+Use the server's actual IP and your chosen ports. On the Docker host, `http://localhost:8080` and `http://localhost:8081` also work. The server firewall must allow the chosen ports from your local network. `CADDY_IP` is an internal Docker address, not the address to open in a browser.
 
-### Trust the local HTTPS certificate
+The initialization script generates missing secrets and preserves existing ones. Do not replace the database password of an initialized installation. `migrate` should exit with code `0`; the other services should remain running. Only the web services publish ports; the API, PostgreSQL, and converter stay internal.
 
-Caddy issues certificates using its local certificate authority. Export the public root certificate:
+Open administration and use the **`SETUP_TOKEN`** from the server's `.env` to create the first administrator account. Initial setup closes once that account exists. Do not commit `.env`.
+
+### Already using the previous Caddy setup?
+
+Select HTTP explicitly to replace the old Compose mode in `.env`, then recreate the services:
 
 ```sh
-docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./visualy-root.crt
+git pull --ff-only
+sh scripts/migrate-visualy.sh
+sh scripts/init-env.sh --http
+docker compose up -d --build --remove-orphans --wait
 ```
 
-Install `visualy-root.crt` as a trusted root certificate on each administration and playback device, including the browser's trust store when it is separate from the operating system. Do not distribute the private key. Trusted HTTPS is required for reliable offline caching.
+This removes the old Caddy container from the active stack while preserving data and certificate volumes. Keep your existing secrets. Use **`http://`** and the configured `ADMIN_PORT`/`PLAYER_PORT`. Sign in and pair the player again at the new origin. Browsers may remember an HSTS policy from earlier HTTPS visits; see the [switching guide](docs/https.md#switching-from-an-earlier-caddy-installation-back-to-http) if HTTP is automatically upgraded.
 
-### Create the first administrator
+## Optional HTTPS with Caddy
 
-Open the administration URL and enter the **`SETUP_TOKEN`** stored in your server's `.env` to create the first administrator account. Initial setup closes once the account has been created.
+HTTP supports online use on a trusted LAN. It does not encrypt credentials or content. Persistent offline playback on remote screens requires trusted HTTPS.
 
-PostgreSQL, the API, and the converter do not publish ports on the host. Only Caddy exposes web access in the HTTPS deployment modes.
+Follow the [Caddy HTTPS guide](docs/https.md) for the full procedure: select a mode, edit `.env`, recreate the services, and install the local root certificate.
 
-## Access modes and ports
-
-| Mode | How to enable it | Default access |
+| Mode | Selection command | Settings |
 | --- | --- | --- |
-| Server IP | `sh scripts/init-env.sh --ip` | Admin: `https://SERVER_IP`; player: `https://SERVER_IP:8443` |
-| Local DNS | Plain `compose.yaml`, with `ADMIN_DOMAIN` and `PLAYER_DOMAIN` configured | Both domain names use HTTPS port `443` |
-| Localhost HTTPS | Select `compose.yaml` and `compose.localhost.yaml` in `.env` | Admin: `https://localhost`; player: `https://localhost:8443` |
-| Development HTTP | Explicitly use `-f compose.yaml -f compose.dev.yaml` | Admin: `http://localhost:8080`; player: `http://localhost:8081` |
+| Direct HTTP (default) | `sh scripts/init-env.sh --http` | `ADMIN_PORT`, `PLAYER_PORT` |
+| HTTPS with DNS | `sh scripts/init-env.sh --https` | `ADMIN_DOMAIN`, `PLAYER_DOMAIN`, `CADDY_HTTP_PORT`, `CADDY_HTTPS_PORT` |
+| HTTPS by server IP | `sh scripts/init-env.sh --ip` | `SERVER_IP`, Caddy ports, `CADDY_PLAYER_HTTPS_PORT` |
+| HTTPS on localhost | `sh scripts/init-env.sh --localhost` | Caddy ports, `LOCAL_PLAYER_HTTPS_PORT` |
 
-`BIND_ADDRESS=0.0.0.0` publishes the IP/DNS modes on the host's IPv4 interfaces. `SERVER_IP` identifies the existing server address for its certificate. `CADDY_IP` and `FRONTEND_SUBNET` refer to Docker's internal network, not the address users enter in a browser.
+HTTPS modes automatically remove the direct HTTP web ports and enable Secure cookies. Recreate the complete stack when switching modes; restarting Caddy alone is not sufficient. Each mode preserves the same database and media volumes. The default command without a mode flag preserves an existing `.env` selection.
 
-### Add DNS names when ready
-
-The IP mode also supports DNS names. Set these in `.env`, using your own names if preferred:
-
-```dotenv
-ADMIN_DOMAIN=admin.visualy.home.arpa
-PLAYER_DOMAIN=player.visualy.home.arpa
-```
-
-Point both DNS records to the server's LAN IP address, then apply the configuration:
-
-```sh
-docker compose up -d --no-deps caddy
-```
-
-Both names use `CADDY_HTTPS_PORT`. Direct player access by IP continues to use `CADDY_PLAYER_HTTPS_PORT`.
-
-For a DNS-only installation, run `sh scripts/init-env.sh` without `--ip` and use the base `compose.yaml`. If switching from another mode, remove its `COMPOSE_FILE` and `COMPOSE_PATH_SEPARATOR` lines from `.env` first.
-
-Changing a hostname or HTTPS port changes the browser origin. Sign in and pair screens again at the new address; browser preferences and offline caches are separate for each origin.
-
-### Test on localhost
-
-Add these lines to `.env`:
-
-```dotenv
-COMPOSE_PATH_SEPARATOR=|
-COMPOSE_FILE=compose.yaml|compose.localhost.yaml
-LOCAL_PLAYER_HTTPS_PORT=8443
-```
-
-Run `docker compose up -d --build --wait`. Open `https://localhost` for administration and `https://localhost:8443` for the player on the Docker host. The certificate must still be trusted. This mode binds only to `127.0.0.1` and needs no DNS or hosts-file entries.
-
-Development HTTP is a separate, explicitly selected mode. Its ports are controlled by `DEV_ADMIN_PORT` and `DEV_PLAYER_PORT` and bind only to localhost; it is not intended for remote screens. The legacy `compose.https.yaml` override remains supported for older commands.
+For localhost-only HTTP development, explicitly use `-f compose.yaml -f compose.dev.yaml`; ports are controlled by `DEV_ADMIN_PORT` and `DEV_PLAYER_PORT`.
 
 ## Publish your first program
 
@@ -175,16 +150,16 @@ Videos play muted by default to comply with browser autoplay rules. Configure ki
 ```sh
 sh scripts/backup.sh
 # On the destination installation, after creating the containers:
-sh scripts/restore.sh ../scenzly-backups/YOUR_BACKUP_DIRECTORY --replace-existing-data
+sh scripts/restore.sh ../visualy-backups/YOUR_BACKUP_DIRECTORY --replace-existing-data
 ```
 
 Backup briefly stops the API to freeze writes and capture PostgreSQL and media together. Restoration replaces existing data. Keep protected copies off the server: backups include application accounts and content. Back up `.env` and Caddy's persistent volumes separately; the application backup script does not include them.
 
-The legacy `scenzly` volume names and backup format are retained for compatibility. See the [operations guide (French)](docs/deployment.md) for the complete procedure.
+Existing `scenzly` volumes and backup formats remain readable after migration. New installations use the `visualy` project name. See the [operations guide (French)](docs/deployment.md) for the complete procedure.
 
 ## Migrating from PostgreSQL 17
 
-New installations use PostgreSQL 18, with `scenzly_postgres18-data` mounted at `/var/lib/postgresql` as required by the PostgreSQL 18 image layout.
+New installations use PostgreSQL 18, with `visualy_postgres18-data` mounted at `/var/lib/postgresql` as required by the PostgreSQL 18 image layout.
 
 **Do not start the new stack directly against an existing PostgreSQL 17 installation.** After fetching the new code, while the old PostgreSQL 17 container is still running, execute:
 
@@ -236,6 +211,7 @@ Logos and fonts are served locally without a CDN. The interface adapts to deskto
 
 The main README is available in English and [French](README.fr.md). The detailed guides below are currently in French:
 
+- [Optional HTTPS with Caddy (English)](docs/https.md)
 - [Deployment, networking, HTTPS, and operations](docs/deployment.md)
 - [Security hardening and upgrade procedure](docs/security/hardening.md)
 - [Internal API contract](docs/api-contract.md)

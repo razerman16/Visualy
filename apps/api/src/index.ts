@@ -25,7 +25,7 @@ const READ:Role[]=['superadmin','admin','editor','viewer'];
 const EDIT:Role[]=['superadmin','admin','editor'];
 const ADMIN:Role[]=['superadmin','admin'];
 const mediaDir = process.env.MEDIA_DIR || '/data/media';
-const api = Fastify({bodyLimit:2*1024*1024,trustProxy:(_address,hop)=>hop<1,logger:{level:process.env.LOG_LEVEL||'info',serializers:{req(req){return {method:req.method,url:req.url?.split('?')[0],hostname:req.hostname,remoteAddress:req.ip};}},redact:['req.headers.authorization','req.headers.cookie','res.headers["set-cookie"]']}});
+const api = Fastify({bodyLimit:2*1024*1024,trustProxy:(_address,hop)=>hop<1,logger:{name:'visualy-api',level:process.env.LOG_LEVEL||'info',serializers:{req(req){return {method:req.method,url:req.url?.split('?')[0],hostname:req.hostname,remoteAddress:req.ip};}},redact:['req.headers.authorization','req.headers.cookie','res.headers["set-cookie"]']}});
 class HttpError extends Error { constructor(public statusCode:number,message:string){super(message)} }
 function fail(status:number,message:string):never {throw new HttpError(status,message)}
 function user(req:FastifyRequest,roles:Role[]=READ):User {if(!req.user)fail(401,'Connexion requise'); if(!roles.includes(req.user.role))fail(403,'Droits insuffisants'); return req.user;}

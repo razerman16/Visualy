@@ -1,7 +1,21 @@
 # HTTPS on the Docker host without DNS or hosts-file entries.
 # Requires Docker Compose >= 2.24.4 for !override.
 services:
+  api:
+    environment:
+      COOKIE_SECURE: "true"
+  admin-web:
+    ports: !reset []
+    environment:
+      TRUSTED_PROXY_IP: ${CADDY_IP:-172.30.240.2}
+  player-web:
+    ports: !reset []
+    environment:
+      TRUSTED_PROXY_IP: ${CADDY_IP:-172.30.240.2}
   caddy:
+    extends:
+      file: compose.https.yaml
+      service: caddy
     ports: !override
       - "127.0.0.1:${CADDY_HTTP_PORT:-80}:80"
       - "127.0.0.1:${CADDY_HTTPS_PORT:-443}:443"

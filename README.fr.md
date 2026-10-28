@@ -6,32 +6,57 @@ Plateforme d’affichage dynamique auto-hébergée pour un réseau local : une a
 
 Screnzly devient **Visualy**. Pour une installation existante, conservez votre `.env` et vos volumes : voir [la mise à jour vers Visualy](docs/deployment.md#passage-de-screnzly-à-visualy).
 
-Pour accéder directement par **l’IP existante du serveur**, lancez `sh scripts/init-env.sh --ip`, choisissez les ports Caddy dans `.env`, puis démarrez Compose. Voir [le mode IP](docs/deployment.md#accéder-directement-par-lip-du-serveur).
+## Migration du nom Docker
 
-Pour tester sur la machine Docker sans configurer de nom de domaine, utilisez le [mode HTTPS localhost](docs/deployment.md#tester-en-https-sur-localhost).
+Avant le premier démarrage de cette version sur une installation `scenzly`, exécuter `sh scripts/migrate-visualy.sh`. Le script sauvegarde l’installation, arrête l’ancien projet et configure `visualy` pour réutiliser les mêmes volumes (`VOLUME_PREFIX=scenzly`). Il refuse un projet cible déjà présent ou des volumes inattendus. Sans ancien projet, il ne modifie rien. Les identifiants internes de base et de navigateur restent compatibles.
 
-## Démarrer sur votre serveur
+## Démarrer en HTTP, sans Caddy
 
-Prérequis : Docker Engine avec Docker Compose v2, ou Docker Desktop avec les conteneurs Linux sous Windows/macOS. Point de départ conseillé : 4 cœurs, 6 Go de RAM et de l’espace disque adapté aux médias. Les performances vidéo dépendent aussi de chaque lecteur.
-
-Depuis ce dossier :
+Prérequis : Docker Engine ou Docker Desktop avec conteneurs Linux. Depuis le dossier du projet :
 
 ```sh
 sh scripts/init-env.sh
-# Configurer ADMIN_DOMAIN et PLAYER_DOMAIN dans .env et dans votre DNS local.
-docker compose up -d --build --wait
-docker compose ps
 ```
 
-Sous Windows, exécutez ces commandes depuis WSL ou Git Bash. Le script crée un fichier `.env` local avec un mot de passe PostgreSQL aléatoire ; il préserve un fichier existant. Ne commitez pas ce fichier.
+Choisir les ports dans `.env` :
 
-Les ports publics se choisissent dans `.env` avec `CADDY_HTTP_PORT=80` et `CADDY_HTTPS_PORT=443`. Par exemple, `CADDY_HTTPS_PORT=8443` donne une adresse terminant par `:8443`. Voir [la configuration des ports](docs/deployment.md#choisir-les-ports-dans-env).
+```dotenv
+BIND_ADDRESS=0.0.0.0
+ADMIN_PORT=8080
+PLAYER_PORT=8081
+```
 
-Les noms par défaut sont `https://admin.visualy.home.arpa` et `https://player.visualy.home.arpa`. Faites-les pointer vers le serveur sur votre DNS local et approuvez l’autorité de certification Caddy sur chaque poste/lecteur. Voir [HTTPS local](docs/deployment.md#https-local-et-cache-hors-connexion).
+Puis lancer :
 
-L’installation du premier administrateur exige la **clé SETUP_TOKEN** stockée dans `.env`, à consulter localement sur le serveur. Elle n’est plus possible avec le seul accès réseau. Après création du premier compte, l’installation est fermée. PostgreSQL, l’API et le convertisseur ne publient aucun port sur l’hôte.
+```sh
+docker compose up -d --build --wait
+```
 
-**Mise à jour d’une installation existante :** suivre [la migration de sécurité](docs/security/hardening.md) avant de redémarrer. HTTPS devient obligatoire par défaut et le compte DB applicatif change ; les données des volumes sont conservées.
+Ouvrir **http://IP_DU_SERVEUR:8080** pour l’administration et **http://IP_DU_SERVEUR:8081** pour le lecteur. Sur la machine Docker, `localhost` fonctionne aussi. Aucun domaine, certificat ou détection d’IP n’est nécessaire. Créer le premier administrateur avec `SETUP_TOKEN` du `.env`.
+
+Le script génère seulement les secrets manquants ; conserver ceux d’une installation existante. PostgreSQL, l’API et le convertisseur restent internes. HTTP permet la lecture en ligne sur un réseau local de confiance ; les échanges ne sont pas chiffrés et le cache persistant des écrans distants nécessite HTTPS.
+
+### Revenir de l’ancien mode Caddy au mode HTTP
+
+```sh
+git pull --ff-only
+sh scripts/migrate-visualy.sh
+sh scripts/init-env.sh --http
+docker compose up -d --build --remove-orphans --wait
+```
+
+Cette sélection remplace les anciennes lignes `COMPOSE_*` du `.env`. Le conteneur Caddy est retiré, les volumes et secrets sont conservés. Utiliser explicitement `http://` et les ports `ADMIN_PORT`/`PLAYER_PORT`. Une reconnexion et un jumelage peuvent être nécessaires sur la nouvelle origine. Si le navigateur force HTTPS à cause d’une ancienne politique HSTS, voir [la procédure de retour à HTTP](docs/https.md#switching-from-an-earlier-caddy-installation-back-to-http).
+
+## HTTPS optionnel
+
+La [procédure Caddy (en anglais)](docs/https.md) décrit les changements du `.env`, le démarrage et l’installation du certificat. Docker Compose 2.24.4 minimum est requis pour les overrides.
+
+- `sh scripts/init-env.sh --https` : HTTPS avec noms DNS.
+- `sh scripts/init-env.sh --ip` : HTTPS avec l’IP existante du serveur.
+- `sh scripts/init-env.sh --localhost` : HTTPS sur la machine Docker uniquement.
+- `sh scripts/init-env.sh --http` : retour à HTTP direct.
+
+Recréer toute la pile après un changement de mode : les ports et les cookies de session changent aussi. Sans option, le script conserve le mode déjà choisi. Les modes HTTPS retirent les ports HTTP directs et activent les cookies Secure.
 
 ## Premier programme
 
@@ -47,16 +72,16 @@ Les programmes publiés conservent une révision figée : modifier un brouillon 
 
 ## HTTPS et fonctionnement hors connexion
 
-HTTPS et le proxy Caddy local sont activés par défaut, sans service cloud. Le cache hors connexion nécessite un certificat approuvé par chaque appareil. L’override `compose.https.yaml` reste accepté pour les anciennes commandes.
+Le lecteur fonctionne en ligne sur HTTP. Le cache après redémarrage hors connexion sur les écrans distants nécessite HTTPS et un certificat approuvé. Caddy est optionnel ; voir [la procédure HTTPS](docs/https.md).
 
-Le mode HTTP de développement doit être demandé explicitement avec `-f compose.yaml -f compose.dev.yaml` ; il publie uniquement `127.0.0.1:8080/8081`. Il ne convient pas aux écrans distants.
+Le mode de développement `-f compose.yaml -f compose.dev.yaml` limite HTTP à localhost, sur `DEV_ADMIN_PORT` et `DEV_PLAYER_PORT`.
 
 ## Sauvegarde et restauration
 
 ```sh
 sh scripts/backup.sh
 # Sur l'instance a restaurer, apres creation des conteneurs :
-sh scripts/restore.sh ../scenzly-backups/SCENZLY_SAUVEGARDE --replace-existing-data
+sh scripts/restore.sh ../visualy-backups/SCENZLY_SAUVEGARDE --replace-existing-data
 ```
 
 La sauvegarde interrompt brièvement l’API pour figer les écritures et sauvegarder ensemble PostgreSQL et les médias. La restauration remplace les données existantes. Conservez les sauvegardes hors du serveur et protégez-les : elles contiennent les comptes et les données de l’application. Détails dans [le guide d’exploitation](docs/deployment.md).
@@ -89,7 +114,7 @@ Les vidéos sont lues sans son par défaut pour respecter les règles d’autopl
 
 ## PostgreSQL 18 et import PDF
 
-Les nouvelles installations utilisent PostgreSQL 18, avec le volume `scenzly_postgres18-data` monté sur `/var/lib/postgresql` (organisation propre aux images PostgreSQL 18).
+Les nouvelles installations utilisent PostgreSQL 18, avec le volume `visualy_postgres18-data` monté sur `/var/lib/postgresql` (organisation propre aux images PostgreSQL 18).
 
 **Installation existante PostgreSQL 17 : ne lancez pas directement `docker compose up`.** Après récupération du nouveau code, et pendant que votre ancien conteneur PostgreSQL 17 fonctionne, lancez :
 

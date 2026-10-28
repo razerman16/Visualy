@@ -5,14 +5,14 @@ services:
     environment:
       CADDY_HTTPS_PORT: ${CADDY_HTTPS_PORT:-18443}
   admin-web:
-    image: scenzly-admin-web:latest
-    ports: ["127.0.0.1:18380:80"]
+    image: visualy-admin-web:latest
+    ports: !override ["127.0.0.1:18380:80"]
   player-web:
-    image: scenzly-player-web:latest
-    ports: ["127.0.0.1:18381:80"]
+    image: visualy-player-web:latest
+    ports: !override ["127.0.0.1:18381:80"]
   api:
-    image: scenzly-api:latest
+    image: visualy-api:latest
   migrate:
-    image: scenzly-api:latest
+    image: visualy-api:latest
   converter:
-    image: scenzly-converter:latest
+    image: visualy-converter:latest

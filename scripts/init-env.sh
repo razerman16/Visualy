@@ -3,8 +3,8 @@
 set -eu
 cd "$(dirname "$0")/.."
 case "${1:-}" in
-    ''|--ip) ;;
-    *) printf '%s\n' 'Usage: sh scripts/init-env.sh [--ip]' >&2; exit 1 ;;
+    ''|--http|--https|--localhost|--ip) ;;
+    *) printf '%s\n' 'Usage: sh scripts/init-env.sh [--http|--https|--localhost|--ip]' >&2; exit 1 ;;
 esac
 umask 077
 if [ ! -e .env ]; then (set -C; : > .env); fi
@@ -25,6 +25,8 @@ while IFS='=' read -r key value; do
     fi
 done <<'DEFAULTS'
 BIND_ADDRESS=0.0.0.0
+ADMIN_PORT=8080
+PLAYER_PORT=8081
 CADDY_HTTP_PORT=80
 CADDY_HTTPS_PORT=443
 CADDY_PLAYER_HTTPS_PORT=8443
@@ -54,4 +56,20 @@ if [ "${1:-}" = --ip ]; then
     trap - EXIT HUP INT TERM
     printf 'Mode IP active : serveur %s (ports HTTPS dans .env).\n' "$server_ip"
 fi
-printf '%s\n' '.env prepare (permissions 600). Secrets existants conserves.' 'Pour la premiere installation, utilisez SETUP_TOKEN de .env dans le formulaire.' 'Configurez ADMIN_DOMAIN, PLAYER_DOMAIN, CADDY_HTTP_PORT et CADDY_HTTPS_PORT, puis approuvez le certificat HTTPS local.'
+case "${1:-}" in
+    --http|--https|--localhost)
+        case "$1" in
+            --http) compose_files=compose.yaml ;;
+            --https) compose_files='compose.yaml|compose.https.yaml' ;;
+            --localhost) compose_files='compose.yaml|compose.localhost.yaml' ;;
+        esac
+        env_tmp=$(mktemp .env.mode.XXXXXX)
+        trap 'rm -f "$env_tmp"' EXIT HUP INT TERM
+        sed '/^COMPOSE_PATH_SEPARATOR=/d; /^COMPOSE_FILE=/d; /^COMPOSE_PROFILES=/d' .env > "$env_tmp"
+        printf 'COMPOSE_PATH_SEPARATOR=|\nCOMPOSE_FILE=%s\n' "$compose_files" >> "$env_tmp"
+        mv "$env_tmp" .env
+        trap - EXIT HUP INT TERM
+        printf 'Mode selectionne : %s\n' "$1"
+        ;;
+esac
+printf '%s\n' '.env prepare (permissions 600). Secrets existants conserves.' 'Pour la premiere installation, utilisez SETUP_TOKEN de .env dans le formulaire.' 'HTTP par defaut : http://IP_DU_SERVEUR:ADMIN_PORT et :PLAYER_PORT (8080/8081). HTTPS optionnel : voir docs/https.md.'

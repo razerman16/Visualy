@@ -1,5 +1,5 @@
 #!/bin/sh
-# Creates and destroys ONLY the screnzly-security-ci fixture installation.
+# Creates and destroys ONLY the visualy-security-ci fixture installation.
 set -eu
 cd "$(dirname "$0")/../.."
 umask 077
@@ -17,8 +17,18 @@ CADDY_IP=172.30.242.2
 FRONTEND_SUBNET=172.30.242.0/24
 FRONTEND_DYNAMIC_RANGE=172.30.242.128/25
 ENV
-compose(){ docker compose --env-file "$fixture_dir/env" -p screnzly-security-ci -f compose.yaml -f tests/security/compose.yaml "$@"; }
-cleanup(){ compose down --volumes >/dev/null 2>&1 || true; rm -rf "$fixture_dir"; }
+compose(){ VOLUME_PREFIX=visualy-security-ci docker compose --env-file "$fixture_dir/env" -p visualy-security-ci -f compose.yaml -f compose.https.yaml -f tests/security/compose.yaml "$@"; }
+cleanup(){
+    result=$?
+    trap - EXIT
+    if [ "$result" -ne 0 ]; then
+        compose ps -a || true
+        compose logs --no-color --tail=100 api migrate converter admin-web player-web caddy || true
+    fi
+    compose down --volumes >/dev/null 2>&1 || true
+    rm -rf "$fixture_dir"
+    exit "$result"
+}
 trap cleanup EXIT
 compose up -d --build --wait
 export SCENZLY_TEST_URL=http://127.0.0.1:18380
