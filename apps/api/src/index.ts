@@ -1,3 +1,5 @@
+import {accountLogins,userRequests,deviceRequests,deviceEvents,deviceEventBytes,identityKey} from './limits.js';
+import {registerUploadGuard} from './upload-guard.js';
 import { registerVideoImports } from './video-imports.js';
 import { registerPdfImports } from './pdf-imports.js';
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
@@ -12,9 +14,9 @@ import { pipeline } from 'node:stream/promises';
 import { Transform } from 'node:stream';
 import { z } from 'zod';
 import { schedulesConflict, getScheduleErrors, type Schedule } from '@scenzly/shared';
-import { pool, migrate, transaction } from './db.js';
+import { pool, transaction } from './db.js';
 import { digest, secret, hashPassword, verifyPassword, sniffMime, parseRange } from './security.js';
-import { credentials, loginSchema, roleSchema, sceneSchema, programSchema, screenSchema, scheduleSchema, groupSchema, pairRequestSchema, pairConfirmSchema, commandSchema } from './validation.js';
+import { credentials, loginSchema, roleSchema, sceneSchema, programSchema, screenSchema, scheduleSchema, groupSchema, pairRequestSchema, pairConfirmSchema, commandSchema, boundedArray } from './validation.js';
 
 type Role = 'superadmin'|'admin'|'editor'|'viewer';
 type User = {id:string;email:string;name:string;role:Role};
@@ -33,9 +35,9 @@ const publicUser=(row:any):User=>({id:row.id,email:row.email,name:row.name,role:
 const mediaView=(row:any)=>({id:row.id,name:row.name,mime:row.mime,size:Number(row.size),url:`${base}/media/${row.id}/file`,checksum:row.checksum,createdAt:row.created_at});
 const programView=(row:any)=>({id:row.id,name:row.name,items:row.items,publishedVersion:row.published_version,createdAt:row.created_at});
 const screenView=(row:any)=>({id:row.id,name:row.name,groupId:row.group_id,orientation:row.orientation,fallbackProgramId:row.fallback_program_id,lastSeen:row.last_seen,currentProgramId:row.current_program_id,online:row.last_seen ? Date.now()-new Date(row.last_seen).getTime()<90000:false});
-async function audit(req:FastifyRequest,type:string,data:object={}) {await pool.query('INSERT INTO events(actor_id,type,data) VALUES($1,$2,$3)',[req.user?.id||null,type,JSON.stringify(data)]);}
-async function session(reply:FastifyReply,id:string) {const token=secret();await pool.query("INSERT INTO sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[digest(token),id]);reply.setCookie('scenzly_session',token,{path:'/',httpOnly:true,sameSite:'strict',secure:process.env.COOKIE_SECURE==='true',maxAge:604800});}
-async function device(req:FastifyRequest,allowQuery=false):Promise<any> {const bearer=req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];const token=bearer||(allowQuery?(req.query as any).token:undefined);if(typeof token!=='string'||token.length>200)fail(401,'Jeton appareil requis');const {rows}=await pool.query('SELECT * FROM screens WHERE token_hash=$1',[digest(token)]);if(!rows[0])fail(401,'Appareil révoqué ou inconnu');return rows[0];}
+async function audit(req:FastifyRequest,type:string,data:object={}) {await pool.query('INSERT INTO security_events(actor_id,type,data) VALUES($1,$2,$3)',[req.user?.id||null,type,JSON.stringify({...data,ip:req.ip})]);}
+async function session(reply:FastifyReply,id:string,passwordHash?:string) {const token=secret();await transaction(async c=>{const row=(await c.query("SELECT password,disabled FROM users WHERE id=$1 FOR UPDATE",[id])).rows[0];if(!row||row.disabled||passwordHash&&row.password!==passwordHash)fail(401,"Connexion requise");await c.query("INSERT INTO sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[digest(token),id]);});reply.setCookie('scenzly_session',token,{path:'/',httpOnly:true,sameSite:'strict',secure:process.env.COOKIE_SECURE!=='false',maxAge:604800});}
+async function device(req:FastifyRequest,allowQuery=false):Promise<any> {const bearer=req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];const token=bearer||(allowQuery?(req.query as any).token:undefined);if(typeof token!=='string'||token.length>200)fail(401,'Jeton appareil requis');const {rows}=await pool.query('SELECT * FROM screens WHERE token_hash=$1',[digest(token)]);if(!rows[0])fail(401,'Appareil révoqué ou inconnu');deviceRequests.take(rows[0].id);return rows[0];}
 async function manifest(screen:any) {
   const schedules=(await pool.query("SELECT data FROM schedules WHERE data->>'screenId'=$1 OR ($2::text IS NOT NULL AND data->>'groupId'=$2)",[screen.id,screen.group_id])).rows.map(r=>r.data);
   const ids=[...new Set([screen.fallback_program_id,...schedules.map(s=>s.programId)].filter(Boolean))];
@@ -55,8 +57,9 @@ api.addHook('preHandler',async(req)=>{
     if(originHost!==host)fail(403,'Origine de la requête interdite');
   }
   const token=req.cookies.scenzly_session;
-  if(token){const {rows}=await pool.query('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=$1 AND s.expires_at>now()',[digest(token)]);if(rows[0])req.user=publicUser(rows[0]);}
+  if(token){const {rows}=await pool.query('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.hash=$1 AND s.expires_at>now() AND NOT u.disabled',[digest(token)]);if(rows[0]){req.user=publicUser(rows[0]);userRequests.take(req.user.id);}}
 });
+registerUploadGuard(api,mediaDir,req=>user(req,EDIT).id);
 api.setErrorHandler((error,req,reply)=>{
   if(error instanceof z.ZodError)return reply.code(400).send({error:error.issues.map(i=>`${i.path.join('.')}: ${i.message}`).join('; ')});
   const err=error as any;
@@ -64,22 +67,43 @@ api.setErrorHandler((error,req,reply)=>{
   if(err.code==='23503')return reply.code(409).send({error:'Élément inexistant ou encore utilisé'});
   if(err.code==='22P02')return reply.code(400).send({error:'Identifiant invalide'});
   if(err.code==='FST_REQ_FILE_TOO_LARGE')return reply.code(413).send({error:'Fichier trop volumineux'});
-  if(err.statusCode>=400&&err.statusCode<500)return reply.code(err.statusCode).send({error:err.message});
+  if(err.statusCode>=400&&err.statusCode<500||err.statusCode===507)return reply.code(err.statusCode).send({error:err.message});
   req.log.error({err:error},'Erreur serveur');reply.code(500).send({error:'Erreur interne du serveur'});
 });
 api.get(`${base}/health`,async()=>{await pool.query('SELECT 1');return {status:'ok'};});
 api.get(`${base}/auth/setup`,async()=>({required:!(await pool.query('SELECT 1 FROM users LIMIT 1')).rowCount}));
 api.post(`${base}/auth/setup`,{config:{rateLimit:{max:5,timeWindow:'1 minute'}}},async(req,reply)=>{
+  if(!process.env.SETUP_TOKEN||typeof (req.body as any)?.setupToken!=='string'||digest((req.body as any).setupToken)!==digest(process.env.SETUP_TOKEN)){await audit(req,'auth.setup_denied');fail(403,'Clé d’installation invalide');}
   const body=credentials.parse(req.body);
   const record=await transaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(7382262)');if((await c.query('SELECT 1 FROM users LIMIT 1')).rowCount)fail(409,'Le compte initial existe déjà');const record={id:randomUUID(),...body,role:'superadmin' as Role};await c.query('INSERT INTO users(id,email,name,role,password) VALUES($1,$2,$3,$4,$5)',[record.id,body.email,body.name,record.role,await hashPassword(body.password)]);return record;});
-  await session(reply,record.id);reply.code(201);return publicUser(record);
+  await audit(req,'auth.setup',{id:record.id});await session(reply,record.id);reply.code(201);return publicUser(record);
 });
-api.post(`${base}/auth/login`,{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async(req,reply)=>{const body=loginSchema.parse(req.body);const row=(await pool.query('SELECT * FROM users WHERE email=$1',[body.email])).rows[0];if(!row||!await verifyPassword(body.password,row.password))fail(401,'Adresse ou mot de passe incorrect');await session(reply,row.id);return publicUser(row);});
+api.post(`${base}/auth/login`,{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async(req,reply)=>{const body=loginSchema.parse(req.body);accountLogins.take(identityKey(body.email));const row=(await pool.query('SELECT * FROM users WHERE email=$1',[body.email])).rows[0];if(!row||row.disabled||!await verifyPassword(body.password,row.password)){await audit(req,'auth.login_failed',{account:identityKey(body.email)});fail(401,'Adresse ou mot de passe incorrect');}await audit(req,'auth.login',{id:row.id});await session(reply,row.id,row.password);return publicUser(row);});
 api.get(`${base}/auth/me`,async(req)=>user(req));
-api.post(`${base}/auth/logout`,async(req,reply)=>{if(req.cookies.scenzly_session)await pool.query('DELETE FROM sessions WHERE hash=$1',[digest(req.cookies.scenzly_session)]);reply.clearCookie('scenzly_session',{path:'/'});return {ok:true};});
-api.get(`${base}/users`,async(req)=>{user(req,['superadmin']);return (await pool.query('SELECT id,email,name,role FROM users ORDER BY name')).rows;});
+api.post(`${base}/auth/logout`,async(req,reply)=>{if(req.cookies.scenzly_session)await pool.query('DELETE FROM sessions WHERE hash=$1',[digest(req.cookies.scenzly_session)]);await audit(req,'auth.logout');reply.clearCookie('scenzly_session',{path:'/'});return {ok:true};});
+api.get(`${base}/users`,async(req)=>{user(req,['superadmin']);return (await pool.query('SELECT id,email,name,role,disabled FROM users ORDER BY name')).rows;});
 api.post(`${base}/users`,async(req,reply)=>{user(req,['superadmin']);const b=credentials.extend({role:roleSchema}).parse(req.body);const id=randomUUID();await pool.query('INSERT INTO users(id,email,name,role,password) VALUES($1,$2,$3,$4,$5)',[id,b.email,b.name,b.role,await hashPassword(b.password)]);await audit(req,'user.created',{id});reply.code(201);return {id,email:b.email,name:b.name,role:b.role};});
-api.patch(`${base}/users/:id`,async(req)=>{user(req,['superadmin']);const id=uid(req);const {role}=z.object({role:roleSchema}).parse(req.body);return transaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(7382262)');const row=(await c.query('SELECT * FROM users WHERE id=$1 FOR UPDATE',[id])).rows[0];if(!row)fail(404,'Utilisateur introuvable');if(row.role==='superadmin'&&role!=='superadmin'&&Number((await c.query("SELECT count(*) FROM users WHERE role='superadmin'")).rows[0].count)<=1)fail(409,'Conservez au moins un superadministrateur');await c.query('UPDATE users SET role=$2 WHERE id=$1',[id,role]);return {...publicUser(row),role};});});
+api.patch(`${base}/users/:id`,async(req)=>{
+ user(req,['superadmin']);const id=uid(req);const b=z.object({role:roleSchema.optional(),disabled:z.boolean().optional()}).parse(req.body);
+ return transaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(7382262)');const row=(await c.query('SELECT * FROM users WHERE id=$1 FOR UPDATE',[id])).rows[0];if(!row)fail(404,'Utilisateur introuvable');
+ const role=b.role??row.role,disabled=b.disabled??row.disabled;
+ if(row.role==='superadmin'&&!row.disabled&&(role!=='superadmin'||disabled)&&Number((await c.query("SELECT count(*) FROM users WHERE role='superadmin' AND NOT disabled")).rows[0].count)<=1)fail(409,'Conservez au moins un superadministrateur');
+ await c.query('UPDATE users SET role=$2,disabled=$3 WHERE id=$1',[id,role,disabled]);
+ await c.query('DELETE FROM sessions WHERE user_id=$1',[id]);
+ await c.query('INSERT INTO security_events(actor_id,type,data) VALUES($1,$2,$3)',[req.user!.id,'user.updated',JSON.stringify({id,role,disabled,ip:req.ip})]);return {...publicUser(row),role,disabled};});
+});
+api.post(`${base}/users/:id/revoke-sessions`,async req=>{user(req,['superadmin']);const id=uid(req);await pool.query('DELETE FROM sessions WHERE user_id=$1',[id]);await audit(req,'user.sessions_revoked',{id});return {ok:true};});
+api.post(`${base}/auth/password`,{config:{rateLimit:{max:5,timeWindow:'1 minute'}}},async(req,reply)=>{
+ const actor=user(req);const b=z.object({currentPassword:z.string().max(128),password:credentials.shape.password}).parse(req.body);
+ await transaction(async c=>{const row=(await c.query('SELECT password FROM users WHERE id=$1 FOR UPDATE',[actor.id])).rows[0];if(!await verifyPassword(b.currentPassword,row.password))fail(403,'Mot de passe actuel incorrect');
+ await c.query('UPDATE users SET password=$2 WHERE id=$1',[actor.id,await hashPassword(b.password)]);await c.query('DELETE FROM sessions WHERE user_id=$1',[actor.id]);await c.query('INSERT INTO security_events(actor_id,type) VALUES($1,$2)',[actor.id,'user.password_changed']);});
+ reply.clearCookie('scenzly_session',{path:'/'});return {ok:true};
+});
+api.post(`${base}/users/:id/password`,{config:{rateLimit:{max:5,timeWindow:'1 minute'}}},async req=>{
+ const actor=user(req,['superadmin']),id=uid(req),b=z.object({currentPassword:z.string().max(128),password:credentials.shape.password}).parse(req.body);
+ const own=(await pool.query('SELECT password FROM users WHERE id=$1',[actor.id])).rows[0];if(!await verifyPassword(b.currentPassword,own.password))fail(403,'Mot de passe actuel incorrect');
+ await transaction(async c=>{if(!(await c.query('UPDATE users SET password=$2 WHERE id=$1',[id,await hashPassword(b.password)])).rowCount)fail(404,'Utilisateur introuvable');await c.query('DELETE FROM sessions WHERE user_id=$1',[id]);await c.query('INSERT INTO security_events(actor_id,type,data) VALUES($1,$2,$3)',[actor.id,'user.password_reset',JSON.stringify({id})]);});return {ok:true};
+});
 api.get(`${base}/dashboard`,async(req)=>{user(req);const {rows}=await pool.query("SELECT (SELECT count(*)::int FROM screens) screens,(SELECT count(*)::int FROM screens WHERE last_seen>now()-interval '90 seconds') online,(SELECT count(*)::int FROM media) media,(SELECT count(*)::int FROM programs) programs");return rows[0];});
 api.get(`${base}/media`,async(req)=>{user(req);return (await pool.query('SELECT * FROM media ORDER BY created_at DESC')).rows.map(mediaView);});
 api.post(`${base}/media`,async(req,reply)=>{
@@ -176,10 +200,10 @@ api.get(`${base}/players/me/manifest`,async(req)=>manifest(await device(req)));
 api.post(`${base}/players/me/heartbeat`,async(req)=>{
   const screen=await device(req);const b=z.object({programId:z.string().uuid().nullable().optional(),revision:z.string().max(100).optional(),error:z.string().max(2000).optional()}).parse(req.body||{});
   await pool.query('UPDATE screens SET last_seen=now(),current_program_id=$2,revision=$3 WHERE id=$1',[screen.id,b.programId||null,b.revision||null]);
-  if(b.error)await pool.query('INSERT INTO events(screen_id,type,data) VALUES($1,$2,$3)',[screen.id,'player.error',JSON.stringify({message:b.error})]);
+  if(b.error){deviceEvents.take(screen.id);deviceEventBytes.take(screen.id,Buffer.byteLength(b.error));await pool.query('INSERT INTO events(screen_id,type,data) VALUES($1,$2,$3)',[screen.id,'player.error',JSON.stringify({message:b.error})]);}
   const commands=(await pool.query('DELETE FROM commands WHERE screen_id=$1 RETURNING id,type',[screen.id])).rows;return {commands};
 });
-api.post(`${base}/players/me/events`,async(req)=>{const screen=await device(req);const b=z.object({events:z.array(z.object({type:z.string().min(1).max(100),programId:z.string().uuid().optional(),itemId:z.string().max(100).optional(),message:z.string().max(2000).optional(),at:z.string().datetime().optional()})).max(100)}).parse(req.body);for(const event of b.events)await pool.query('INSERT INTO events(screen_id,type,data) VALUES($1,$2,$3)',[screen.id,event.type,JSON.stringify(event)]);return {ok:true};});
+api.post(`${base}/players/me/events`,async(req)=>{const screen=await device(req);const b=z.object({events:boundedArray(z.object({type:z.enum(['play','playback','error','online','offline']),programId:z.string().uuid().optional(),itemId:z.string().max(100).optional(),message:z.string().max(2000).optional(),at:z.string().datetime().optional()}),25)}).parse(req.body);deviceEvents.take(screen.id,b.events.length);deviceEventBytes.take(screen.id,Buffer.byteLength(JSON.stringify(b)));for(const event of b.events)await pool.query('INSERT INTO events(screen_id,type,data) VALUES($1,$2,$3)',[screen.id,'player.'+event.type,JSON.stringify(event)]);return {ok:true};});
 api.get(`${base}/schedules`,async(req)=>{user(req);return (await pool.query('SELECT data FROM schedules ORDER BY id')).rows.map(r=>r.data);});
 async function saveSchedule(req:FastifyRequest,reply:FastifyReply,existing:boolean){
   user(req,ADMIN);const id=existing?uid(req):randomUUID(),data={...scheduleSchema.parse(req.body),id} as Schedule;const errors=getScheduleErrors(data);if(errors.length)fail(400,errors.join('; '));
@@ -188,13 +212,14 @@ async function saveSchedule(req:FastifyRequest,reply:FastifyReply,existing:boole
 api.post(`${base}/schedules`,(req,reply)=>saveSchedule(req,reply,false));
 api.put(`${base}/schedules/:id`,(req,reply)=>saveSchedule(req,reply,true));
 api.delete(`${base}/schedules/:id`,async(req)=>{user(req,ADMIN);const id=uid(req);if(!(await pool.query('DELETE FROM schedules WHERE id=$1',[id])).rowCount)fail(404,'Planification introuvable');await audit(req,'schedule.deleted',{id});return {ok:true};});
+api.get(`${base}/security-events`,async req=>{user(req,ADMIN);return (await pool.query('SELECT id,actor_id AS "actorId",type,data,created_at AS "createdAt" FROM security_events ORDER BY id DESC LIMIT 200')).rows;});
 api.get(`${base}/events`,async(req)=>{user(req);return (await pool.query('SELECT e.id,e.screen_id AS "screenId",e.actor_id AS "actorId",e.type,e.data,e.created_at AS "createdAt",s.name AS "screenName" FROM events e LEFT JOIN screens s ON s.id=e.screen_id ORDER BY e.created_at DESC LIMIT 200')).rows;});
 
 await mkdir(mediaDir,{recursive:true});
-await migrate();
+const privilege=(await pool.query('SELECT rolsuper FROM pg_roles WHERE rolname=current_user')).rows[0];if(privilege?.rolsuper)throw new Error('Refusing to run API with a PostgreSQL superuser. Run the migration service.');
 await registerPdfImports(api,mediaDir,(req,write)=>{user(req,write?EDIT:READ);});
 await registerVideoImports(api,mediaDir,(req,write)=>{user(req,write?EDIT:READ);});
-const cleanup=setInterval(()=>{void pool.query("DELETE FROM sessions WHERE expires_at<now(); DELETE FROM pair_requests WHERE expires_at<now()-interval '1 day'; DELETE FROM events WHERE created_at<now()-interval '30 days'").catch(err=>api.log.error(err));},3600000);cleanup.unref();
+const cleanup=setInterval(()=>{void pool.query("DELETE FROM sessions WHERE expires_at<now(); DELETE FROM pair_requests WHERE expires_at<now()-interval '1 day'; DELETE FROM events WHERE created_at<now()-interval '30 days'; SELECT public.prune_security_events()").catch(err=>api.log.error(err));},3600000);cleanup.unref();
 api.addHook('onClose',async()=>{clearInterval(cleanup);});
 for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{void api.close().then(()=>pool.end()).then(()=>process.exit(0));});
 await api.listen({port:Number(process.env.PORT||3000),host:process.env.HOST||'0.0.0.0'});

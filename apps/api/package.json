@@ -1,6 +1,27 @@
 {
-  "name": "@scenzly/api", "version": "0.1.0", "private": true, "type": "module",
-  "scripts": {"build":"tsc -p tsconfig.json", "dev":"tsx watch src/index.ts", "start":"node dist/index.js", "test":"tsx --test test/*.test.ts"},
-  "dependencies": {"@fastify/cookie":"^11.0.2", "@fastify/multipart":"^9.2.1", "@fastify/rate-limit":"^10.3.0", "@scenzly/shared":"*", "fastify":"^5.6.1", "pg":"^8.16.3", "zod":"^3.25.76"},
-  "devDependencies": {"@types/pg":"^8.15.5", "tsx":"^4.20.6"}
+  "name": "@scenzly/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/multipart": "^9.2.1",
+    "@fastify/rate-limit": "^10.3.0",
+    "@scenzly/shared": "*",
+    "fastify": "^5.6.1",
+    "pg": "^8.16.3",
+    "tar-stream": "^3.2.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.5",
+    "@types/tar-stream": "^3.1.5",
+    "tsx": "^4.20.6"
+  }
 }

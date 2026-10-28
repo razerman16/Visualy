@@ -1,5 +1,5 @@
 import {getLocale,t,translateMessage} from '@scenzly/shared';
-export interface User {id:string;email:string;name:string;role:'superadmin'|'admin'|'editor'|'viewer'}
+export interface User {disabled?:boolean;id:string;email:string;name:string;role:'superadmin'|'admin'|'editor'|'viewer'}
 export interface Media {id:string;name:string;mime:string;size:number;url:string;checksum:string;createdAt:string}
 export interface SceneElement {id:string;type:'text'|'image'|'video'|'shape'|'clock'|'qr';x:number;y:number;width:number;height:number;text?:string;mediaId?:string;color?:string;background?:string;fontSize?:number;fontWeight?:number;opacity?:number;rotation?:number;zIndex?:number}
 export interface Scene {id:string;name:string;width:number;height:number;background:string;elements:SceneElement[]}

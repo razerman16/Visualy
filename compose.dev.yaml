@@ -1,0 +1,11 @@
+# Explicit localhost-only HTTP for development. Never bind these ports to a LAN address.
+services:
+  api:
+    environment:
+      COOKIE_SECURE: "false"
+  admin-web:
+    ports: ["127.0.0.1:8080:80"]
+  player-web:
+    ports: ["127.0.0.1:8081:80"]
+  caddy:
+    profiles: [https]

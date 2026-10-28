@@ -4,26 +4,24 @@ Plateforme d’affichage dynamique auto-hébergée pour un réseau local : une a
 
 ## Démarrer sur votre serveur
 
-Prérequis : Docker Engine avec Docker Compose v2, ou Docker Desktop avec les conteneurs Linux sous Windows/macOS. Point de départ conseillé : 2 cœurs, 4 Go de RAM et de l’espace disque adapté aux médias. Les performances vidéo dépendent aussi de chaque lecteur.
+Prérequis : Docker Engine avec Docker Compose v2, ou Docker Desktop avec les conteneurs Linux sous Windows/macOS. Point de départ conseillé : 4 cœurs, 6 Go de RAM et de l’espace disque adapté aux médias. Les performances vidéo dépendent aussi de chaque lecteur.
 
 Depuis ce dossier :
 
 ```sh
 sh scripts/init-env.sh
+# Configurer ADMIN_DOMAIN et PLAYER_DOMAIN dans .env et dans votre DNS local.
 docker compose up -d --build --wait
 docker compose ps
 ```
 
 Sous Windows, exécutez ces commandes depuis WSL ou Git Bash. Le script crée un fichier `.env` local avec un mot de passe PostgreSQL aléatoire ; il préserve un fichier existant. Ne commitez pas ce fichier.
 
-Sur votre réseau, remplacez `IP_DU_SERVEUR` par l’adresse de votre machine :
+Les noms par défaut sont `https://admin.scenzly.home.arpa` et `https://player.scenzly.home.arpa`. Faites-les pointer vers le serveur sur votre DNS local et approuvez l’autorité de certification Caddy sur chaque poste/lecteur. Voir [HTTPS local](docs/deployment.md#https-local-et-cache-hors-connexion).
 
-| Interface | Adresse |
-| --- | --- |
-| Administration | `http://IP_DU_SERVEUR:8080` |
-| Lecteur écran | `http://IP_DU_SERVEUR:8081` |
+L’installation du premier administrateur exige la **clé SETUP_TOKEN** stockée dans `.env`, à consulter localement sur le serveur. Elle n’est plus possible avec le seul accès réseau. Après création du premier compte, l’installation est fermée. PostgreSQL, l’API et le convertisseur ne publient aucun port sur l’hôte.
 
-Ouvrez l’administration et créez immédiatement le premier compte administrateur. Il n’existe aucun compte ni mot de passe prédéfini. Cette inscription initiale se ferme après création du premier compte ; effectuez-la depuis un réseau de confiance. PostgreSQL et l’API ne publient aucun port sur l’hôte.
+**Mise à jour d’une installation existante :** suivre [la migration de sécurité](docs/security/hardening.md) avant de redémarrer. HTTPS devient obligatoire par défaut et le compte DB applicatif change ; les données des volumes sont conservées.
 
 ## Premier programme
 
@@ -39,9 +37,9 @@ Les programmes publiés conservent une révision figée : modifier un brouillon 
 
 ## HTTPS et fonctionnement hors connexion
 
-Les ports 8080/8081 permettent les premiers essais sur le LAN. Pour activer le Service Worker et le cache après redémarrage du navigateur sur les écrans distants, utilisez **HTTPS avec un certificat approuvé par chaque appareil**. Une adresse HTTP sur le LAN n’est généralement pas un contexte sécurisé.
+HTTPS et le proxy Caddy local sont activés par défaut, sans service cloud. Le cache hors connexion nécessite un certificat approuvé par chaque appareil. L’override `compose.https.yaml` reste accepté pour les anciennes commandes.
 
-Une configuration Caddy avec autorité de certification locale est fournie. Elle fonctionne sans DNS public ni certificat cloud. Voir [le guide de déploiement](docs/deployment.md#https-local-et-cache-hors-connexion) pour configurer les noms locaux et installer le certificat racine.
+Le mode HTTP de développement doit être demandé explicitement avec `-f compose.yaml -f compose.dev.yaml` ; il publie uniquement `127.0.0.1:8080/8081`. Il ne convient pas aux écrans distants.
 
 ## Sauvegarde et restauration
 

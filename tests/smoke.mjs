@@ -32,10 +32,10 @@ const health = await req('/health', {auth:null});
 assert.equal(health.status, 'ok');
 await req('/screens', { auth:null, status:401 });
 const setup = await req('/auth/setup', { auth:null });
-const user = await req(setup.required ? '/auth/setup' : '/auth/login', {method:'POST',body:{email,password,name:'Recette automatisée'}});
+const user = await req(setup.required ? '/auth/setup' : '/auth/login', {method:'POST',body:{email,password,name:'Recette automatisée',setupToken:process.env.SCENZLY_SETUP_TOKEN}});
 assert.equal(user.role,'superadmin');
 await req('/auth/me');
-await req('/auth/setup',{method:'POST',body:{email:'intruder@example.test',password,name:'Intruder'},status:409});
+await req('/auth/setup',{method:'POST',body:{email:'intruder@example.test',password,name:'Intruder',setupToken:process.env.SCENZLY_SETUP_TOKEN},status:409});
 
 // Exercise the persisted PDF queue and publication-ready generated page.
 let pdf='%PDF-1.4\n';const offsets=[0];

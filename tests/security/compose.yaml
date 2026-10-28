@@ -1,0 +1,16 @@
+# Disposable integration installation, separate project and volumes.
+services:
+  caddy:
+    ports: !override ["127.0.0.1:18443:443", "127.0.0.1:18080:80"]
+  admin-web:
+    image: scenzly-admin-web:latest
+    ports: ["127.0.0.1:18380:80"]
+  player-web:
+    image: scenzly-player-web:latest
+    ports: ["127.0.0.1:18381:80"]
+  api:
+    image: scenzly-api:latest
+  migrate:
+    image: scenzly-api:latest
+  converter:
+    image: scenzly-converter:latest

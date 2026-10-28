@@ -1,0 +1,33 @@
+#!/bin/sh
+# Creates and destroys ONLY the screnzly-security-ci fixture installation.
+set -eu
+cd "$(dirname "$0")/../.."
+umask 077
+fixture_dir=$(mktemp -d)
+cat > "$fixture_dir/env" <<'ENV'
+POSTGRES_PASSWORD=disposable-security-test
+APP_DB_PASSWORD=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+SETUP_TOKEN=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+CONVERTER_TOKEN=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+ADMIN_DOMAIN=admin.screnzly.test
+PLAYER_DOMAIN=player.screnzly.test
+CADDY_IP=172.30.242.2
+FRONTEND_SUBNET=172.30.242.0/24
+FRONTEND_DYNAMIC_RANGE=172.30.242.128/25
+ENV
+compose(){ docker compose --env-file "$fixture_dir/env" -p screnzly-security-ci -f compose.yaml -f tests/security/compose.yaml "$@"; }
+cleanup(){ compose down --volumes >/dev/null 2>&1 || true; rm -rf "$fixture_dir"; }
+trap cleanup EXIT
+compose up -d --build --wait
+export SCENZLY_TEST_URL=http://127.0.0.1:18380
+export SCENZLY_TEST_EMAIL=ci-admin@example.test
+export SCENZLY_TEST_PASSWORD='Disposable CI password 2026!'
+export SCENZLY_SETUP_TOKEN=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+node tests/smoke.mjs
+node tests/security/accounts.mjs
+node tests/security/player-events.mjs
+node tests/security/browser.mjs
+SCENZLY_ADMIN_URL=$SCENZLY_TEST_URL SCENZLY_PLAYER_URL=http://127.0.0.1:18381 node tests/ui/preferences.mjs
+SCENZLY_PLAYER_URL=http://127.0.0.1:18381 node tests/ui/offline-shell.mjs
+compose cp caddy:/data/caddy/pki/authorities/local/root.crt "$fixture_dir/root.crt"
+curl --fail --noproxy '*' --resolve admin.screnzly.test:18443:127.0.0.1 --cacert "$fixture_dir/root.crt" -sI https://admin.screnzly.test:18443/

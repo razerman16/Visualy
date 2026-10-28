@@ -1,3 +1,4 @@
+import {convertRemote} from './conversion-client.js';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { pool } from './db.js';
 import { randomUUID, createHash } from 'node:crypto';
@@ -6,15 +7,14 @@ import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 const exec = promisify(execFile);
-export async function convertPdf(source:string, directory:string) {
-  const info=await exec('pdfinfo',[source],{timeout:15000,maxBuffer:65536});
+export async function convertPdf(source:string, directory:string,signal?:AbortSignal) {
+  const info=await exec('pdfinfo',[source],{timeout:15000,maxBuffer:65536,signal,env:{PATH:process.env.PATH}});
   const pages=Number(/^Pages:\s+(\d+)/m.exec(info.stdout)?.[1]);
   if(!pages || pages>50) throw new Error('Le document doit contenir entre 1 et 50 pages.');
-  await exec('pdftoppm',['-png','-scale-to','1920','-r','96',source,join(directory,'page')],{timeout:120000,maxBuffer:65536});
+  await exec('pdftoppm',['-png','-scale-to','1920','-r','96',source,join(directory,'page')],{timeout:120000,maxBuffer:65536,signal,env:{PATH:process.env.PATH}});
   return (await readdir(directory)).filter(n=>/^page-\d+\.png$/.test(n)).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
 }
 export async function registerPdfImports(api:FastifyInstance, directory:string, authorize:(r:FastifyRequest,write:boolean)=>void) {
-  await pool.query(`CREATE TABLE IF NOT EXISTS pdf_imports(id uuid PRIMARY KEY,name text NOT NULL,path text NOT NULL,status text NOT NULL DEFAULT 'pending',error text,media_ids jsonb NOT NULL DEFAULT '[]',created_at timestamptz NOT NULL DEFAULT now())`);
   const route='/api/v1/imports/pdf';
   api.get(route,async req=>{authorize(req,false);return (await pool.query('SELECT id,name,status,error,media_ids AS "mediaIds",created_at AS "createdAt" FROM pdf_imports ORDER BY created_at DESC LIMIT 100')).rows;});
   api.post(route,async(req,reply)=>{
@@ -31,12 +31,13 @@ export async function registerPdfImports(api:FastifyInstance, directory:string, 
     const client=await pool.connect();let temp='';const outputs:string[]=[];
     try{
       await client.query('BEGIN');
+      if(!(await client.query('SELECT pg_try_advisory_xact_lock(7382265) AS locked')).rows[0].locked){await client.query('COMMIT');return;}
       const job=(await client.query("SELECT * FROM pdf_imports WHERE status='pending' ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1")).rows[0];
       if(!job){await client.query('COMMIT');return;}
       temp=join(directory,`pdf-work-${job.id}`);await rm(temp,{recursive:true,force:true});await mkdir(temp);
       await client.query('SAVEPOINT conversion');
       try{
-        const pages=await convertPdf(job.path,temp);const ids:string[]=[];
+        const {files:pages}=await convertRemote('pdf',job.path,temp);const ids:string[]=[];
         for(const [index,page] of pages.entries()){
           const bytes=await readFile(join(temp,page)),id=randomUUID(),path=join(directory,id);outputs.push(path);
           await writeFile(path,bytes,{flag:'wx',mode:0o600});
@@ -52,6 +53,6 @@ export async function registerPdfImports(api:FastifyInstance, directory:string, 
     }catch(error){await client.query('ROLLBACK').catch(()=>{});for(const path of outputs)await rm(path,{force:true});api.log.error({err:error},'PDF import failed');}
     finally{if(temp)await rm(temp,{recursive:true,force:true});client.release();}
   }
-  const timer=setInterval(()=>{if(!stopped&&!running)running=work().finally(()=>{running=undefined;});},2000);timer.unref();
+  const timer=setInterval(()=>{if(!stopped&&!running)running=work().catch(error=>api.log.error({err:error},'PDF queue unavailable')).finally(()=>{running=undefined;});},2000);timer.unref();
   api.addHook('onClose',async()=>{stopped=true;clearInterval(timer);await running;});
 }

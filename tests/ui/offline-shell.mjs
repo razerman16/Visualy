@@ -4,9 +4,10 @@ const browser=await chromium.launch({executablePath:process.env.SCENZLY_CHROMIUM
 try{
  const context=await browser.newContext(),page=await context.newPage();
  await page.goto(process.env.SCENZLY_PLAYER_URL||'http://127.0.0.1:8281');
+ await page.waitForFunction(async()=>!!(await navigator.serviceWorker.getRegistration())?.active,undefined,{timeout:30000});
  await page.evaluate(()=>navigator.serviceWorker.ready);
  await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
- const cached=await page.evaluate(async()=>{const cache=await caches.open('scenzly-shell-v3');return (await cache.keys()).map(r=>new URL(r.url).pathname)});
+ const cached=await page.evaluate(async()=>{const cache=await caches.open('scenzly-shell-v4');return (await cache.keys()).map(r=>new URL(r.url).pathname)});
  assert.ok(cached.some(p=>p.endsWith('.woff2')),'self-hosted fonts cached');
  assert.ok(cached.includes('/brand/screnzly-logo.png'),'logo cached');
  assert.ok(cached.includes('/brand/screnzly-mark.png'),'mark cached');

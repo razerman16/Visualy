@@ -1,0 +1,63 @@
+{
+  "note": "Occurrences paquet/avis, pas des CVE uniques. Images locales de validation construites depuis les artefacts compilés et les étapes runtime du Dockerfile ; npm retiré, Nginx 1.30 et composants inutilisés retirés.",
+  "results": [
+    {
+      "image": "screnzly-converter-check:latest",
+      "imageId": "sha256:81c478851a28fc24e31bae0cd389b538c2f21756436c4d807a53633f07b7f98a",
+      "createdAt": "2026-10-28T04:17:12.610985921Z",
+      "components": [
+        {
+          "target": "screnzly-converter-check:latest (debian 12.15)",
+          "highCriticalOccurrences": 274,
+          "withReportedFix": 0
+        },
+        {
+          "target": "Node.js",
+          "highCriticalOccurrences": 0,
+          "withReportedFix": 0
+        }
+      ]
+    },
+    {
+      "image": "screnzly-api-check:latest",
+      "imageId": "sha256:ea56d96196959807d53cee97365279e73142085530826c0aa6e1c8fa1a034bf1",
+      "createdAt": "2026-10-28T04:18:58.941431548Z",
+      "components": [
+        {
+          "target": "screnzly-api-check:latest (debian 12.15)",
+          "highCriticalOccurrences": 57,
+          "withReportedFix": 0
+        },
+        {
+          "target": "Node.js",
+          "highCriticalOccurrences": 0,
+          "withReportedFix": 0
+        }
+      ]
+    },
+    {
+      "image": "screnzly-admin-check:latest",
+      "imageId": "sha256:eb745d536e1fb9f2082f2c6f6aad7b0be82a6bc6428d0a8f0c9c7a837f1c539c",
+      "createdAt": "2026-10-28T04:26:36.426577882Z",
+      "components": [
+        {
+          "target": "screnzly-admin-check:latest (alpine 3.24.3)",
+          "highCriticalOccurrences": 0,
+          "withReportedFix": 0
+        }
+      ]
+    },
+    {
+      "image": "screnzly-player-check:latest",
+      "imageId": "sha256:ce631751898b4e0b5e1cc67d8b4a660e85908466ea498df378bda8a457060281",
+      "createdAt": "2026-10-28T04:26:59.095037045Z",
+      "components": [
+        {
+          "target": "screnzly-player-check:latest (alpine 3.24.3)",
+          "highCriticalOccurrences": 0,
+          "withReportedFix": 0
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,8 @@
     "dev:api": "npm run dev -w @scenzly/api",
     "dev:admin": "npm run dev -w @scenzly/admin",
     "dev:player": "npm run dev -w @scenzly/player",
-    "test:smoke": "node tests/smoke.mjs"
+    "test:smoke": "node tests/smoke.mjs",
+    "test:security": "tsx --test tests/security/*.test.ts"
   },
   "engines": {
     "node": ">=22"

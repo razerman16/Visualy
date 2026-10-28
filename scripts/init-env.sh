@@ -1,26 +1,16 @@
 #!/bin/sh
+# Idempotent upgrade: never replace existing secrets. No secret is printed.
 set -eu
 cd "$(dirname "$0")/.."
-if [ -e .env ]; then
-    printf '%s\n' '.env existe deja ; aucune modification.'
-    exit 0
-fi
 umask 077
-scenzly_password=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
-if [ "${#scenzly_password}" -ne 64 ]; then
-    printf '%s\n' 'Impossible de generer un secret aleatoire.' >&2
-    exit 1
-fi
-# noclobber also protects a file created between the existence test and this write.
-(
-    set -C
-    cat > .env <<EOF
-POSTGRES_PASSWORD=$scenzly_password
-BIND_ADDRESS=0.0.0.0
-ADMIN_PORT=8080
-PLAYER_PORT=8081
-COOKIE_SECURE=false
-EOF
-)
-unset scenzly_password
-printf '%s\n' '.env cree avec un mot de passe PostgreSQL aleatoire (permissions 600).'
+if [ ! -e .env ]; then (set -C; : > .env); fi
+chmod 600 .env
+for key in POSTGRES_PASSWORD APP_DB_PASSWORD SETUP_TOKEN CONVERTER_TOKEN; do
+    if ! grep -q "^${key}=." .env; then
+        value=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
+        test "${#value}" -eq 64
+        printf '\n%s=%s\n' "$key" "$value" >> .env
+    fi
+done
+unset value
+printf '%s\n' '.env prepare (permissions 600). Secrets existants conserves.' 'Pour la premiere installation, utilisez SETUP_TOKEN de .env dans le formulaire.' 'Configurez les noms ADMIN_DOMAIN et PLAYER_DOMAIN et approuvez le certificat HTTPS local.'

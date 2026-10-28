@@ -21,11 +21,12 @@ fi
 docker compose stop -t 150 api
 # Keep the API stopped on any failure; never serve a partially restored database.
 docker compose exec -T postgres pg_restore --exit-on-error --clean --if-exists --no-owner --no-privileges -U scenzly -d scenzly < "$scenzly_restore_dir/database.dump"
-docker compose run --rm --no-deps -T --user root --entrypoint sh api -c '
+docker compose run --rm --no-deps -T --user root --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER --entrypoint sh api -c '
   set -eu
   find /data/media -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
   tar -xzf - -C /data/media
   chown -R node:node /data/media
 ' < "$scenzly_restore_dir/media.tar.gz"
+docker compose run --rm --no-deps migrate
 docker compose start api
 printf '%s\n' 'Restauration terminee. Verifiez docker compose ps puis reconnectez les ecrans si necessaire.'

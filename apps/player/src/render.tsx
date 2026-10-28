@@ -10,7 +10,7 @@ function Qr({ text }: { text: string }) {
   return src ? <img src={src} className="element-asset" alt={t("QR code")} /> : null;
 }
 function Element({ element: e, urls, now, onError }: { element: SceneElement; urls: Record<string, string>; now: Date; onError: (error: string) => void }) {
-  const style: React.CSSProperties = { position: 'absolute', left: e.x, top: e.y, width: e.width, height: e.height, color: e.color || '#ffffff', background: e.background || 'transparent', fontSize: e.fontSize || 40, fontWeight: e.fontWeight || 'normal', opacity: e.opacity ?? 1, transform: `rotate(${e.rotation || 0}deg)`, zIndex: e.zIndex || 0, overflow: 'hidden', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' };
+  const style: React.CSSProperties = { position: 'absolute', left: e.x, top: e.y, width: e.width, height: e.height, color: e.color || '#ffffff', backgroundColor: e.background || 'transparent', fontSize: e.fontSize || 40, fontWeight: e.fontWeight || 'normal', opacity: e.opacity ?? 1, transform: `rotate(${e.rotation || 0}deg)`, zIndex: e.zIndex || 0, overflow: 'hidden', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' };
   const source = e.mediaId ? urls[e.mediaId] : null;
   return <div style={style}>
     {e.type === 'text' && e.text}
@@ -24,7 +24,7 @@ export function SceneView({ scene, urls, now, onError }: { scene: Scene; urls: R
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   useEffect(() => { const resize = () => setViewport({ width: window.innerWidth, height: window.innerHeight }); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
   const scale = Math.min(viewport.width / scene.width, viewport.height / scene.height);
-  return <div className="scene-viewport"><div className="scene" style={{ width: scene.width, height: scene.height, background: scene.background, transform: `translate(-50%, -50%) scale(${scale})` }}>
+  return <div className="scene-viewport"><div className="scene" style={{ width: scene.width, height: scene.height, backgroundColor: scene.background, transform: `translate(-50%, -50%) scale(${scale})` }}>
     {scene.elements.map(element => <Element key={element.id} element={element} urls={urls} now={now} onError={onError} />)}
   </div></div>;
 }

@@ -1,5 +1,5 @@
 import pg from 'pg';
-export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10, connectionTimeoutMillis: 10000, statement_timeout: 30000 });
 export async function migrate() {
   const client = await pool.connect();
   try {
@@ -18,6 +18,12 @@ export async function migrate() {
       CREATE TABLE IF NOT EXISTS schedules (id uuid PRIMARY KEY, data jsonb NOT NULL);
       CREATE TABLE IF NOT EXISTS commands (id uuid PRIMARY KEY, screen_id uuid NOT NULL REFERENCES screens(id) ON DELETE CASCADE, type text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
       CREATE TABLE IF NOT EXISTS events (id bigserial PRIMARY KEY, screen_id uuid, actor_id uuid, type text NOT NULL, data jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now());
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled boolean NOT NULL DEFAULT false;
+      CREATE TABLE IF NOT EXISTS security_events (id bigserial PRIMARY KEY, actor_id uuid, type text NOT NULL, data jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now());
+      CREATE INDEX IF NOT EXISTS security_events_created_idx ON security_events(created_at DESC);
+      CREATE TABLE IF NOT EXISTS pdf_imports(id uuid PRIMARY KEY,name text NOT NULL,path text NOT NULL,status text NOT NULL DEFAULT 'pending',error text,media_ids jsonb NOT NULL DEFAULT '[]',created_at timestamptz NOT NULL DEFAULT now());
+      CREATE TABLE IF NOT EXISTS video_imports(id uuid PRIMARY KEY,name text NOT NULL,path text NOT NULL,status text NOT NULL DEFAULT 'pending',error text,media_id uuid,duration double precision,created_at timestamptz NOT NULL DEFAULT now());
+      CREATE INDEX IF NOT EXISTS events_screen_time_idx ON events(screen_id,created_at);
       CREATE INDEX IF NOT EXISTS events_created_idx ON events(created_at DESC);
       CREATE INDEX IF NOT EXISTS sessions_expires_idx ON sessions(expires_at);
       CREATE INDEX IF NOT EXISTS screens_group_idx ON screens(group_id);
