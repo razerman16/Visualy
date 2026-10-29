@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+# Keep PostgreSQL 18/Debian and its entrypoint/data layout; only rebuild the
+# privilege-dropping helper with a corrected Go runtime (gosu 1.19 commit).
+FROM golang:1.27.3-alpine AS gosu-build
+ENV CGO_ENABLED=0 GOTOOLCHAIN=local
+RUN go install -trimpath -ldflags="-s -w" github.com/tianon/gosu@6456aaa0f3c8
+
+FROM postgres:18-bookworm AS postgres
+COPY --from=gosu-build /go/bin/gosu /usr/local/bin/gosu
+RUN gosu nobody true

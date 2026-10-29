@@ -1,3 +1,4 @@
+import {boundedRows,reserveContent,checkContent,CONTENT_LIMITS} from './content-budget.js';
 import {legacyIdentity,sessionToken} from '@visualy/shared';
 import {accountLogins,userRequests,deviceRequests,deviceEvents,deviceEventBytes,identityKey} from './limits.js';
 import {registerUploadGuard} from './upload-guard.js';
@@ -25,6 +26,7 @@ declare module 'fastify' {interface FastifyRequest {user?:User}}
 const READ:Role[]=['superadmin','admin','editor','viewer'];
 const EDIT:Role[]=['superadmin','admin','editor'];
 const ADMIN:Role[]=['superadmin','admin'];
+const dummyPasswordHash = await hashPassword(secret());
 const mediaDir = process.env.MEDIA_DIR || '/data/media';
 const api = Fastify({bodyLimit:2*1024*1024,trustProxy:(_address,hop)=>hop<1,logger:{name:'visualy-api',level:process.env.LOG_LEVEL||'info',serializers:{req(req){return {method:req.method,url:req.url?.split('?')[0],hostname:req.hostname,remoteAddress:req.ip};}},redact:['req.headers.authorization','req.headers.cookie','res.headers["set-cookie"]']}});
 class HttpError extends Error { constructor(public statusCode:number,message:string){super(message)} }
@@ -40,17 +42,18 @@ async function audit(req:FastifyRequest,type:string,data:object={}) {await pool.
 async function session(reply:FastifyReply,id:string,passwordHash?:string) {const token=secret();await transaction(async c=>{const row=(await c.query("SELECT password,disabled FROM users WHERE id=$1 FOR UPDATE",[id])).rows[0];if(!row||row.disabled||passwordHash&&row.password!==passwordHash)fail(401,"Connexion requise");await c.query("INSERT INTO sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[digest(token),id]);});reply.setCookie('visualy_session',token,{path:'/',httpOnly:true,sameSite:'strict',secure:process.env.COOKIE_SECURE!=='false',maxAge:604800});}
 async function device(req:FastifyRequest,allowQuery=false):Promise<any> {const bearer=req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];const token=bearer||(allowQuery?(req.query as any).token:undefined);if(typeof token!=='string'||token.length>200)fail(401,'Jeton appareil requis');const {rows}=await pool.query('SELECT * FROM screens WHERE token_hash=$1',[digest(token)]);if(!rows[0])fail(401,'Appareil révoqué ou inconnu');deviceRequests.take(rows[0].id);return rows[0];}
 async function manifest(screen:any) {
-  const schedules=(await pool.query("SELECT data FROM schedules WHERE data->>'screenId'=$1 OR ($2::text IS NOT NULL AND data->>'groupId'=$2)",[screen.id,screen.group_id])).rows.map(r=>r.data);
+  const schedules=await boundedRows(pool,"SELECT data AS payload FROM schedules WHERE data->>'screenId'=$1 OR ($2::text IS NOT NULL AND data->>'groupId'=$2)",[screen.id,screen.group_id],CONTENT_LIMITS.document);
   const ids=[...new Set([screen.fallback_program_id,...schedules.map(s=>s.programId)].filter(Boolean))];
-  const programs=ids.length?(await pool.query('SELECT v.payload FROM program_versions v JOIN programs p ON p.id=v.program_id AND p.published_version=v.version WHERE p.id=ANY($1::uuid[]) ORDER BY p.id',[ids])).rows.map(r=>r.payload):[];
+  const programs=ids.length?await boundedRows(pool,'SELECT v.payload FROM program_versions v JOIN programs p ON p.id=v.program_id AND p.published_version=v.version WHERE p.id=ANY($1::uuid[]) ORDER BY p.id',[ids],CONTENT_LIMITS.manifest/2):[];
   const media=[...new Map(programs.flatMap(p=>p.media).map((m:any)=>[m.id,m])).values()];
   const data={screen:{id:screen.id,name:screen.name,orientation:screen.orientation},fallbackProgramId:screen.fallback_program_id,programs,schedules,media};
+  checkContent(data,CONTENT_LIMITS.manifest);
   return {revision:digest(JSON.stringify(data)),serverTime:new Date().toISOString(),...data};
 }
 await api.register(cookie);
 await api.register(rateLimit,{max:600,timeWindow:'1 minute'});
 await api.register(multipart,{limits:{fileSize:Number(process.env.MAX_UPLOAD_MB||500)*1024*1024,files:1,fields:10}});
-api.addHook('onRequest',async(req,reply)=>{reply.header('X-Content-Type-Options','nosniff').header('Referrer-Policy','no-referrer');});
+api.addHook('onRequest',async(req,reply)=>{reply.header('X-Content-Type-Options','nosniff').header('Referrer-Policy','no-referrer').header('Cache-Control','no-store');});
 api.addHook('preHandler',async(req)=>{
   if(!['GET','HEAD','OPTIONS'].includes(req.method)&&req.headers.origin){
     const host=req.headers['x-forwarded-host']||req.headers.host;
@@ -79,7 +82,7 @@ api.post(`${base}/auth/setup`,{config:{rateLimit:{max:5,timeWindow:'1 minute'}}}
   const record=await transaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(7382262)');if((await c.query('SELECT 1 FROM users LIMIT 1')).rowCount)fail(409,'Le compte initial existe déjà');const record={id:randomUUID(),...body,role:'superadmin' as Role};await c.query('INSERT INTO users(id,email,name,role,password) VALUES($1,$2,$3,$4,$5)',[record.id,body.email,body.name,record.role,await hashPassword(body.password)]);return record;});
   await audit(req,'auth.setup',{id:record.id});await session(reply,record.id);reply.code(201);return publicUser(record);
 });
-api.post(`${base}/auth/login`,{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async(req,reply)=>{const body=loginSchema.parse(req.body);accountLogins.take(identityKey(body.email));const row=(await pool.query('SELECT * FROM users WHERE email=$1',[body.email])).rows[0];if(!row||row.disabled||!await verifyPassword(body.password,row.password)){await audit(req,'auth.login_failed',{account:identityKey(body.email)});fail(401,'Adresse ou mot de passe incorrect');}await audit(req,'auth.login',{id:row.id});await session(reply,row.id,row.password);return publicUser(row);});
+api.post(`${base}/auth/login`,{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async(req,reply)=>{const body=loginSchema.parse(req.body);accountLogins.take(identityKey(body.email));const row=(await pool.query('SELECT * FROM users WHERE email=$1',[body.email])).rows[0];const passwordValid=await verifyPassword(body.password,row?.password||dummyPasswordHash);if(!row||row.disabled||!passwordValid){await audit(req,'auth.login_failed',{account:identityKey(body.email)});fail(401,'Adresse ou mot de passe incorrect');}await audit(req,'auth.login',{id:row.id});await session(reply,row.id,row.password);return publicUser(row);});
 api.get(`${base}/auth/me`,async(req)=>user(req));
 api.post(`${base}/auth/logout`,async(req,reply)=>{const token=sessionToken(req.cookies);if(token)await pool.query('DELETE FROM sessions WHERE hash=$1',[digest(token)]);await audit(req,'auth.logout');reply.clearCookie('visualy_session',{path:'/'});reply.clearCookie(legacyIdentity.sessionCookie,{path:'/'});return {ok:true};});
 api.get(`${base}/users`,async(req)=>{user(req,['superadmin']);return (await pool.query('SELECT id,email,name,role,disabled FROM users ORDER BY name')).rows;});
@@ -120,9 +123,9 @@ api.post(`${base}/media`,async(req,reply)=>{
   }finally{if(!stored)await unlink(path).catch(()=>{});}
 });
 api.get(`${base}/media/:id/file`,async(req,reply)=>{
-  const id=uid(req);if(!req.user){const screen=await device(req,true);const allowed=(await manifest(screen)).media.some((m:any)=>m.id===id);if(!allowed)fail(403,'Média non affecté à cet appareil');}
+  const id=uid(req);if(!req.user){const screen=await device(req,true);const allowed=(await pool.query("SELECT 1 FROM program_versions v JOIN programs p ON p.id=v.program_id AND p.published_version=v.version WHERE (p.id=$1::uuid OR p.id IN (SELECT (data->>'programId')::uuid FROM schedules WHERE data->>'screenId'=$2 OR ($3::text IS NOT NULL AND data->>'groupId'=$3))) AND v.payload->'media' @> $4::jsonb LIMIT 1",[screen.fallback_program_id,screen.id,screen.group_id,JSON.stringify([{id}])])).rowCount;if(!allowed)fail(403,'Média non affecté à cet appareil');}
   const row=(await pool.query('SELECT * FROM media WHERE id=$1',[id])).rows[0];if(!row)fail(404,'Média introuvable');
-  const size=Number(row.size);reply.header('Content-Type',row.mime).header('Accept-Ranges','bytes').header('Cache-Control','private, max-age=3600').header('ETag',`"${row.checksum}"`).header('Content-Disposition',`inline; filename*=UTF-8''${encodeURIComponent(row.name)}`);
+  const size=Number(row.size);reply.header('Content-Type',row.mime).header('Accept-Ranges','bytes').header('Cache-Control','no-store').header('ETag',`"${row.checksum}"`).header('Content-Disposition',`inline; filename*=UTF-8''${encodeURIComponent(row.name)}`);
   if(req.headers['if-none-match']===`"${row.checksum}"`&&!req.headers.range)return reply.code(304).send();
   if(req.headers.range){const range=parseRange(req.headers.range,size);if(!range)return reply.code(416).header('Content-Range',`bytes */${size}`).send();reply.code(206).header('Content-Range',`bytes ${range.start}-${range.end}/${size}`).header('Content-Length',range.end-range.start+1);return reply.send(createReadStream(row.path,range));}
   reply.header('Content-Length',size);return reply.send(createReadStream(row.path));
@@ -137,27 +140,38 @@ api.delete(`${base}/media/:id`,async(req)=>{
   });
   await unlink(row.path).catch(()=>{});await audit(req,'media.deleted',{id});return {ok:true};
 });
-api.get(`${base}/scenes`,async(req)=>{user(req);return (await pool.query('SELECT data FROM scenes ORDER BY updated_at DESC')).rows.map(r=>r.data);});
+api.get(`${base}/scenes`,async(req)=>{
+ user(req);const query=z.object({summary:z.literal('true').optional(),offset:z.coerce.number().int().min(0).max(1000000).default(0)}).parse(req.query);
+ if(query.summary)return boundedRows(pool,`SELECT jsonb_build_object('id',id,'name',data->'name','width',data->'width','height',data->'height','background',data->'background','elements','[]'::jsonb,'summaryOnly',true) AS payload FROM scenes ORDER BY updated_at DESC,id LIMIT 1000 OFFSET $1`,[query.offset]);
+ return boundedRows(pool,'SELECT data AS payload FROM scenes ORDER BY updated_at DESC');
+});
+api.get(`${base}/scenes/:id`,async req=>{user(req);const rows=await boundedRows(pool,'SELECT data AS payload FROM scenes WHERE id=$1',[uid(req)],4*1024*1024);if(!rows[0])fail(404,'Scène introuvable');return rows[0];});
 async function saveScene(req:FastifyRequest,reply:FastifyReply,existing:boolean){
   user(req,EDIT);const data=sceneSchema.parse(req.body);const id=existing?uid(req):randomUUID();const full={...data,id,updatedAt:new Date().toISOString()};
-  if(existing){if(!(await pool.query('UPDATE scenes SET data=$2,updated_at=now() WHERE id=$1',[id,JSON.stringify(full)])).rowCount)fail(404,'Scène introuvable');}else{await pool.query('INSERT INTO scenes(id,data) VALUES($1,$2)',[id,JSON.stringify(full)]);reply.code(201);}await audit(req,'scene.saved',{id});return full;
+  await transaction(async c=>{await reserveContent(c,'scenes','data',full,existing?id:undefined);if(existing){if(!(await c.query('UPDATE scenes SET data=$2,updated_at=now() WHERE id=$1',[id,JSON.stringify(full)])).rowCount)fail(404,'Scène introuvable');}else{await c.query('INSERT INTO scenes(id,data) VALUES($1,$2)',[id,JSON.stringify(full)]);reply.code(201);}});await audit(req,'scene.saved',{id});return full;
 }
 api.post(`${base}/scenes`,(req,reply)=>saveScene(req,reply,false));
 api.put(`${base}/scenes/:id`,(req,reply)=>saveScene(req,reply,true));
 api.delete(`${base}/scenes/:id`,async(req)=>{user(req,EDIT);const id=uid(req);if((await pool.query('SELECT 1 FROM programs WHERE items @> $1::jsonb LIMIT 1',[JSON.stringify([{type:'scene',refId:id}])])).rowCount)fail(409,'Cette scène est utilisée par un programme');if(!(await pool.query('DELETE FROM scenes WHERE id=$1',[id])).rowCount)fail(404,'Scène introuvable');await audit(req,'scene.deleted',{id});return {ok:true};});
-api.get(`${base}/programs`,async(req)=>{user(req);return (await pool.query('SELECT * FROM programs ORDER BY created_at DESC')).rows.map(programView);});
-async function saveProgram(req:FastifyRequest,reply:FastifyReply,existing:boolean){user(req,EDIT);const data=programSchema.parse(req.body);const id=existing?uid(req):randomUUID();const result=existing?await pool.query('UPDATE programs SET name=$2,items=$3 WHERE id=$1 RETURNING *',[id,data.name,JSON.stringify(data.items)]):await pool.query('INSERT INTO programs(id,name,items) VALUES($1,$2,$3) RETURNING *',[id,data.name,JSON.stringify(data.items)]);if(!result.rows[0])fail(404,'Programme introuvable');if(!existing)reply.code(201);await audit(req,'program.saved',{id});return programView(result.rows[0]);}
+api.get(`${base}/programs`,async(req)=>{user(req);return (await boundedRows(pool,'SELECT to_jsonb(p) AS payload FROM programs p ORDER BY created_at DESC')).map(programView);});
+async function saveProgram(req:FastifyRequest,reply:FastifyReply,existing:boolean){
+ user(req,EDIT);const data=programSchema.parse(req.body),id=existing?uid(req):randomUUID();
+ const result=await transaction(async c=>{await reserveContent(c,'programs','items',data.items,existing?id:undefined);
+ const result=existing?await c.query('UPDATE programs SET name=$2,items=$3 WHERE id=$1 RETURNING *',[id,data.name,JSON.stringify(data.items)]):await c.query('INSERT INTO programs(id,name,items) VALUES($1,$2,$3) RETURNING *',[id,data.name,JSON.stringify(data.items)]);
+ if(!result.rows[0])fail(404,'Programme introuvable');return result.rows[0];});
+ if(!existing)reply.code(201);await audit(req,'program.saved',{id});return programView(result);
+}
 api.post(`${base}/programs`,(req,reply)=>saveProgram(req,reply,false));
 api.put(`${base}/programs/:id`,(req,reply)=>saveProgram(req,reply,true));
 api.post(`${base}/programs/:id/publish`,async(req)=>{
   user(req,ADMIN);const id=uid(req);const result=await transaction(async c=>{
     await c.query('SELECT pg_advisory_xact_lock(7382263)');
-    const row=(await c.query('SELECT * FROM programs WHERE id=$1 FOR UPDATE',[id])).rows[0];if(!row)fail(404,'Programme introuvable');if(!row.items.length)fail(400,'Ajoutez au moins un élément avant publication');
+    const row=(await boundedRows(c,'SELECT to_jsonb(p) AS payload FROM programs p WHERE id=$1 FOR UPDATE',[id],CONTENT_LIMITS.document))[0];if(!row)fail(404,'Programme introuvable');if(!row.items.length)fail(400,'Ajoutez au moins un élément avant publication');
     const scenes:any[]=[];const mediaIds=new Set<string>();
-    for(const item of row.items){if(item.type==='media'){mediaIds.add(item.refId);}else{const scene=(await c.query('SELECT data FROM scenes WHERE id=$1',[item.refId])).rows[0]?.data;if(!scene)fail(400,'Une scène de la playlist est introuvable');if(!scenes.some(s=>s.id===scene.id))scenes.push(scene);for(const el of scene.elements){if(el.type==='image'||el.type==='video'){if(!el.mediaId)fail(400,'Un élément de scène ne contient aucun média');mediaIds.add(el.mediaId);}}}}
-    const mediaRows=mediaIds.size?(await c.query('SELECT * FROM media WHERE id=ANY($1::uuid[])',[Array.from(mediaIds)])).rows:[];if(mediaRows.length!==mediaIds.size)fail(400,'Un média de la playlist est introuvable');
+    for(const item of row.items){if(item.type==='media'){mediaIds.add(item.refId);}else{const scene=scenes.find(s=>s.id===item.refId)||(await boundedRows(c,'SELECT data AS payload FROM scenes WHERE id=$1',[item.refId],CONTENT_LIMITS.document))[0];if(!scene)fail(400,'Une scène de la playlist est introuvable');if(!scenes.some(s=>s.id===scene.id)){scenes.push(scene);checkContent(scenes,CONTENT_LIMITS.publication);}for(const el of scene.elements){if(el.type==='image'||el.type==='video'){if(!el.mediaId)fail(400,'Un élément de scène ne contient aucun média');mediaIds.add(el.mediaId);}}}}
+    const mediaRows=mediaIds.size?await boundedRows(c,'SELECT to_jsonb(m) AS payload FROM media m WHERE id=ANY($1::uuid[])',[Array.from(mediaIds)],CONTENT_LIMITS.publication):[];if(mediaRows.length!==mediaIds.size)fail(400,'Un média de la playlist est introuvable');
     for(const scene of scenes)for(const el of scene.elements)if(el.type==='image'||el.type==='video'){const m=mediaRows.find(m=>m.id===el.mediaId);if(!m?.mime.startsWith(el.type+'/'))fail(400,'Le type du média ne correspond pas à son élément de scène');}
-    const version=row.published_version+1;const payload={id,name:row.name,version,items:row.items,scenes,media:mediaRows.map(mediaView)};await c.query('INSERT INTO program_versions(program_id,version,payload) VALUES($1,$2,$3)',[id,version,JSON.stringify(payload)]);await c.query('UPDATE programs SET published_version=$2 WHERE id=$1',[id,version]);return programView({...row,published_version:version});
+    const version=row.published_version+1;const payload={id,name:row.name,version,items:row.items,scenes,media:mediaRows.map(mediaView)};await reserveContent(c,'program_versions','payload',payload);await c.query('INSERT INTO program_versions(program_id,version,payload) VALUES($1,$2,$3)',[id,version,JSON.stringify(payload)]);await c.query('UPDATE programs SET published_version=$2 WHERE id=$1',[id,version]);return programView({...row,published_version:version});
   });await audit(req,'program.published',{id,version:result.publishedVersion});return result;
 });
 api.delete(`${base}/programs/:id`,async(req)=>{
@@ -205,10 +219,10 @@ api.post(`${base}/players/me/heartbeat`,async(req)=>{
   const commands=(await pool.query('DELETE FROM commands WHERE screen_id=$1 RETURNING id,type',[screen.id])).rows;return {commands};
 });
 api.post(`${base}/players/me/events`,async(req)=>{const screen=await device(req);const b=z.object({events:boundedArray(z.object({type:z.enum(['play','playback','error','online','offline']),programId:z.string().uuid().optional(),itemId:z.string().max(100).optional(),message:z.string().max(2000).optional(),at:z.string().datetime().optional()}),25)}).parse(req.body);deviceEvents.take(screen.id,b.events.length);deviceEventBytes.take(screen.id,Buffer.byteLength(JSON.stringify(b)));for(const event of b.events)await pool.query('INSERT INTO events(screen_id,type,data) VALUES($1,$2,$3)',[screen.id,'player.'+event.type,JSON.stringify(event)]);return {ok:true};});
-api.get(`${base}/schedules`,async(req)=>{user(req);return (await pool.query('SELECT data FROM schedules ORDER BY id')).rows.map(r=>r.data);});
+api.get(`${base}/schedules`,async(req)=>{user(req);return boundedRows(pool,'SELECT data AS payload FROM schedules ORDER BY id');});
 async function saveSchedule(req:FastifyRequest,reply:FastifyReply,existing:boolean){
   user(req,ADMIN);const id=existing?uid(req):randomUUID(),data={...scheduleSchema.parse(req.body),id} as Schedule;const errors=getScheduleErrors(data);if(errors.length)fail(400,errors.join('; '));
-  await transaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(7382263)');if(!(await c.query('SELECT 1 FROM programs WHERE id=$1 AND published_version>0',[data.programId])).rowCount)fail(400,'Le programme doit être publié');if(data.screenId&&!(await c.query('SELECT 1 FROM screens WHERE id=$1',[data.screenId])).rowCount)fail(400,'Écran introuvable');if(data.groupId&&!(await c.query('SELECT 1 FROM groups WHERE id=$1',[data.groupId])).rowCount)fail(400,'Groupe introuvable');const others=(await c.query('SELECT data FROM schedules WHERE id<>$1',[id])).rows.map(r=>r.data);if(others.some(other=>schedulesConflict(data,other)))fail(409,'Conflit avec une planification de même cible, nature et priorité');if(existing){if(!(await c.query('UPDATE schedules SET data=$2 WHERE id=$1',[id,JSON.stringify(data)])).rowCount)fail(404,'Planification introuvable');}else{await c.query('INSERT INTO schedules(id,data) VALUES($1,$2)',[id,JSON.stringify(data)]);reply.code(201);}});await audit(req,'schedule.saved',{id});return data;
+  await transaction(async c=>{await c.query('SELECT pg_advisory_xact_lock(7382263)');if(!(await c.query('SELECT 1 FROM programs WHERE id=$1 AND published_version>0',[data.programId])).rowCount)fail(400,'Le programme doit être publié');if(data.screenId&&!(await c.query('SELECT 1 FROM screens WHERE id=$1',[data.screenId])).rowCount)fail(400,'Écran introuvable');if(data.groupId&&!(await c.query('SELECT 1 FROM groups WHERE id=$1',[data.groupId])).rowCount)fail(400,'Groupe introuvable');await reserveContent(c,'schedules','data',data,existing?id:undefined);const others=await boundedRows(c,'SELECT data AS payload FROM schedules WHERE id<>$1',[id]);if(others.some(other=>schedulesConflict(data,other)))fail(409,'Conflit avec une planification de même cible, nature et priorité');if(existing){if(!(await c.query('UPDATE schedules SET data=$2 WHERE id=$1',[id,JSON.stringify(data)])).rowCount)fail(404,'Planification introuvable');}else{await c.query('INSERT INTO schedules(id,data) VALUES($1,$2)',[id,JSON.stringify(data)]);reply.code(201);}});await audit(req,'schedule.saved',{id});return data;
 }
 api.post(`${base}/schedules`,(req,reply)=>saveSchedule(req,reply,false));
 api.put(`${base}/schedules/:id`,(req,reply)=>saveSchedule(req,reply,true));

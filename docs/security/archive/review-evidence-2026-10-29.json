@@ -1,0 +1,1458 @@
+{
+  "date": "2026-10-29",
+  "sourceCommit": "5369d54fbac9dccc7a682be218f9d17bd75bb27e",
+  "trivyImage": "aquasec/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c",
+  "database": {
+    "Version": 2,
+    "NextUpdate": "2026-10-29T01:21:08.391884123Z",
+    "UpdatedAt": "2026-10-28T01:21:08.391884645Z",
+    "DownloadedAt": "2026-10-28T04:24:32.231874107Z"
+  },
+  "scope": "Local cached images; database update skipped; occurrence counts do not establish exploitability.",
+  "npmAudit": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 125,
+      "dev": 128,
+      "optional": 54,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 253
+    }
+  },
+  "images": [
+    {
+      "component": "api",
+      "imageId": "sha256:d27d52e14c41d277156e49db82ee94e5ac6c96de6da86bd8ec8b09f0b92488c1",
+      "os": {
+        "Family": "debian",
+        "Name": "12.15"
+      },
+      "high": 56,
+      "critical": 1,
+      "fixed": 0,
+      "unfixed": 57,
+      "fixableAdvisories": []
+    },
+    {
+      "component": "converter",
+      "imageId": "sha256:9e94544333138bfcd2790671173b84720e7bc6f0fc1f3512e969378c56a9b0cf",
+      "os": {
+        "Family": "debian",
+        "Name": "12.15"
+      },
+      "high": 266,
+      "critical": 8,
+      "fixed": 0,
+      "unfixed": 274,
+      "fixableAdvisories": []
+    },
+    {
+      "component": "admin",
+      "imageId": "sha256:1ada8f9efbd0a3e85920222f04524d7bad40eaed577b5656ce4d015cbc866961",
+      "os": {
+        "Family": "alpine",
+        "Name": "3.24.3"
+      },
+      "high": 0,
+      "critical": 0,
+      "fixed": 0,
+      "unfixed": 0,
+      "fixableAdvisories": []
+    },
+    {
+      "component": "player",
+      "imageId": "sha256:d24578c990f9868ec73eedc38e025b72955d9a746e8447f61d4736e4e5611509",
+      "os": {
+        "Family": "alpine",
+        "Name": "3.24.3"
+      },
+      "high": 0,
+      "critical": 0,
+      "fixed": 0,
+      "unfixed": 0,
+      "fixableAdvisories": []
+    },
+    {
+      "component": "caddy",
+      "imageId": "sha256:aac61abc4024c323602ccb9ee38bd68b147601f518626b2a055e06944e01c510",
+      "os": {
+        "Family": "alpine",
+        "Name": "3.22.3"
+      },
+      "high": 96,
+      "critical": 6,
+      "fixed": 101,
+      "unfixed": 1,
+      "fixableAdvisories": [
+        {
+          "id": "CVE-2026-33630",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "c-ares",
+          "installed": "1.34.6-r0",
+          "fixed": "1.34.8-r0",
+          "severity": "HIGH",
+          "title": "c-ares: c-ares: Use-after-free / double-free in query-completion handling",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33630"
+        },
+        {
+          "id": "CVE-2026-5773",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "curl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: libcurl: Wrong file transfer due to incorrect SMB connection reuse",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-5773"
+        },
+        {
+          "id": "CVE-2026-6276",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "curl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: libcurl: Information disclosure due to cookie leak when reusing connections with custom Host headers",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-6276"
+        },
+        {
+          "id": "CVE-2026-8286",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "curl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: curl: Insecure connection establishment due to TLS configuration mismatch",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-8286"
+        },
+        {
+          "id": "CVE-2026-8927",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "curl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: Information disclosure due to uncleared proxy authentication state",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-8927"
+        },
+        {
+          "id": "CVE-2026-92392",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "curl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: curl: HTTP/2 upload Use-After-Free",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-92392"
+        },
+        {
+          "id": "CVE-2026-4878",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcap",
+          "installed": "2.76-r0",
+          "fixed": "2.78-r0",
+          "severity": "HIGH",
+          "title": "libcap: libcap: Privilege escalation via TOCTOU race condition in cap_set_file()",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-4878"
+        },
+        {
+          "id": "CVE-2026-4878",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcap-getcap",
+          "installed": "2.76-r0",
+          "fixed": "2.78-r0",
+          "severity": "HIGH",
+          "title": "libcap: libcap: Privilege escalation via TOCTOU race condition in cap_set_file()",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-4878"
+        },
+        {
+          "id": "CVE-2026-4878",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcap-setcap",
+          "installed": "2.76-r0",
+          "fixed": "2.78-r0",
+          "severity": "HIGH",
+          "title": "libcap: libcap: Privilege escalation via TOCTOU race condition in cap_set_file()",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-4878"
+        },
+        {
+          "id": "CVE-2026-4878",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcap-utils",
+          "installed": "2.76-r0",
+          "fixed": "2.78-r0",
+          "severity": "HIGH",
+          "title": "libcap: libcap: Privilege escalation via TOCTOU race condition in cap_set_file()",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-4878"
+        },
+        {
+          "id": "CVE-2026-4878",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcap2",
+          "installed": "2.76-r0",
+          "fixed": "2.78-r0",
+          "severity": "HIGH",
+          "title": "libcap: libcap: Privilege escalation via TOCTOU race condition in cap_set_file()",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-4878"
+        },
+        {
+          "id": "CVE-2026-31789",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcrypto3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "CRITICAL",
+          "title": "openssl: OpenSSL: Heap buffer overflow on 32-bit systems from large X.509 certificate processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-31789"
+        },
+        {
+          "id": "CVE-2026-14456",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcrypto3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.8-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service via unbounded memory growth in QUIC server",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-14456"
+        },
+        {
+          "id": "CVE-2026-28387",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcrypto3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Arbitrary code execution due to use-after-free in DANE TLSA authentication",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28387"
+        },
+        {
+          "id": "CVE-2026-28388",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcrypto3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service due to NULL pointer dereference in delta CRL processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28388"
+        },
+        {
+          "id": "CVE-2026-28389",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcrypto3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service vulnerability in CMS processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28389"
+        },
+        {
+          "id": "CVE-2026-28390",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcrypto3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service due to NULL pointer dereference in CMS EnvelopedData processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28390"
+        },
+        {
+          "id": "CVE-2026-45447",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcrypto3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.7-r0",
+          "severity": "HIGH",
+          "title": "openssl: Heap Use-After-Free in OpenSSL PKCS7_verify()",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-45447"
+        },
+        {
+          "id": "CVE-2026-5773",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcurl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: libcurl: Wrong file transfer due to incorrect SMB connection reuse",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-5773"
+        },
+        {
+          "id": "CVE-2026-6276",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcurl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: libcurl: Information disclosure due to cookie leak when reusing connections with custom Host headers",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-6276"
+        },
+        {
+          "id": "CVE-2026-8286",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcurl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: curl: Insecure connection establishment due to TLS configuration mismatch",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-8286"
+        },
+        {
+          "id": "CVE-2026-8927",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcurl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: Information disclosure due to uncleared proxy authentication state",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-8927"
+        },
+        {
+          "id": "CVE-2026-92392",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libcurl",
+          "installed": "8.14.1-r2",
+          "fixed": "8.14.1-r4",
+          "severity": "HIGH",
+          "title": "curl: curl: HTTP/2 upload Use-After-Free",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-92392"
+        },
+        {
+          "id": "CVE-2026-31789",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libssl3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "CRITICAL",
+          "title": "openssl: OpenSSL: Heap buffer overflow on 32-bit systems from large X.509 certificate processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-31789"
+        },
+        {
+          "id": "CVE-2026-14456",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libssl3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.8-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service via unbounded memory growth in QUIC server",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-14456"
+        },
+        {
+          "id": "CVE-2026-28387",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libssl3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Arbitrary code execution due to use-after-free in DANE TLSA authentication",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28387"
+        },
+        {
+          "id": "CVE-2026-28388",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libssl3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service due to NULL pointer dereference in delta CRL processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28388"
+        },
+        {
+          "id": "CVE-2026-28389",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libssl3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service vulnerability in CMS processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28389"
+        },
+        {
+          "id": "CVE-2026-28390",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libssl3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.6-r0",
+          "severity": "HIGH",
+          "title": "openssl: OpenSSL: Denial of Service due to NULL pointer dereference in CMS EnvelopedData processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-28390"
+        },
+        {
+          "id": "CVE-2026-45447",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "libssl3",
+          "installed": "3.5.5-r0",
+          "fixed": "3.5.7-r0",
+          "severity": "HIGH",
+          "title": "openssl: Heap Use-After-Free in OpenSSL PKCS7_verify()",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-45447"
+        },
+        {
+          "id": "CVE-2026-40200",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "musl",
+          "installed": "1.2.5-r10",
+          "fixed": "1.2.5-r12",
+          "severity": "HIGH",
+          "title": "musl: musl libc: Arbitrary code execution and denial of service via stack-based memory corruption in qsort",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-40200"
+        },
+        {
+          "id": "CVE-2026-40200",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "musl-utils",
+          "installed": "1.2.5-r10",
+          "fixed": "1.2.5-r12",
+          "severity": "HIGH",
+          "title": "musl: musl libc: Arbitrary code execution and denial of service via stack-based memory corruption in qsort",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-40200"
+        },
+        {
+          "id": "CVE-2026-27135",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "nghttp2-libs",
+          "installed": "1.65.0-r0",
+          "fixed": "1.68.1",
+          "severity": "HIGH",
+          "title": "nghttp2: nghttp2: Denial of Service via malformed HTTP/2 frames after session termination",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27135"
+        },
+        {
+          "id": "CVE-2026-22184",
+          "target": "caddy:2.10-alpine (alpine 3.22.3)",
+          "package": "zlib",
+          "installed": "1.3.1-r2",
+          "fixed": "1.3.2-r0",
+          "severity": "HIGH",
+          "title": "zlib: zlib: Arbitrary code execution via buffer overflow in untgz utility",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-22184"
+        },
+        {
+          "id": "CVE-2026-27586",
+          "target": "usr/bin/caddy",
+          "package": "github.com/caddyserver/caddy/v2",
+          "installed": "v2.10.2",
+          "fixed": "2.11.1",
+          "severity": "HIGH",
+          "title": "Caddy is an extensible server platform that uses TLS by default. Prior ...",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27586"
+        },
+        {
+          "id": "CVE-2026-27587",
+          "target": "usr/bin/caddy",
+          "package": "github.com/caddyserver/caddy/v2",
+          "installed": "v2.10.2",
+          "fixed": "2.11.1",
+          "severity": "HIGH",
+          "title": "Caddy is an extensible server platform that uses TLS by default. Prior ...",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27587"
+        },
+        {
+          "id": "CVE-2026-27588",
+          "target": "usr/bin/caddy",
+          "package": "github.com/caddyserver/caddy/v2",
+          "installed": "v2.10.2",
+          "fixed": "2.11.1",
+          "severity": "HIGH",
+          "title": "Caddy is an extensible server platform that uses TLS by default. Prior ...",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27588"
+        },
+        {
+          "id": "CVE-2026-27590",
+          "target": "usr/bin/caddy",
+          "package": "github.com/caddyserver/caddy/v2",
+          "installed": "v2.10.2",
+          "fixed": "2.11.1",
+          "severity": "HIGH",
+          "title": "Caddy is an extensible server platform that uses TLS by default. Prior ...",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27590"
+        },
+        {
+          "id": "CVE-2026-45135",
+          "target": "usr/bin/caddy",
+          "package": "github.com/caddyserver/caddy/v2",
+          "installed": "v2.10.2",
+          "fixed": "2.11.3",
+          "severity": "HIGH",
+          "title": "caddy: github.com/caddyserver/caddy/v2: Caddy: Remote Code Execution via Unsafe Unicode Handling in FastCGI",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-45135"
+        },
+        {
+          "id": "CVE-2026-52844",
+          "target": "usr/bin/caddy",
+          "package": "github.com/caddyserver/caddy/v2",
+          "installed": "v2.10.2",
+          "fixed": "2.11.4",
+          "severity": "HIGH",
+          "title": "Caddy: Windows `file_server` path authorization bypass via encoded backslash",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-52844"
+        },
+        {
+          "id": "CVE-2026-52845",
+          "target": "usr/bin/caddy",
+          "package": "github.com/caddyserver/caddy/v2",
+          "installed": "v2.10.2",
+          "fixed": "2.11.4",
+          "severity": "HIGH",
+          "title": "github.com/caddyserver/caddy: Caddy: Remote client can inject or override identity headers via header normalization",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-52845"
+        },
+        {
+          "id": "CVE-2026-34986",
+          "target": "usr/bin/caddy",
+          "package": "github.com/go-jose/go-jose/v3",
+          "installed": "v3.0.4",
+          "fixed": "3.0.5",
+          "severity": "HIGH",
+          "title": "github.com/go-jose/go-jose/v3: github.com/go-jose/go-jose/v4: Go JOSE: Denial of Service via crafted JSON Web Encryption (JWE) object",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-34986"
+        },
+        {
+          "id": "CVE-2026-116587",
+          "target": "usr/bin/caddy",
+          "package": "github.com/go-jose/go-jose/v4",
+          "installed": "v4.0.5",
+          "fixed": "4.1.6",
+          "severity": "HIGH",
+          "title": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-116587"
+        },
+        {
+          "id": "CVE-2026-34986",
+          "target": "usr/bin/caddy",
+          "package": "github.com/go-jose/go-jose/v4",
+          "installed": "v4.0.5",
+          "fixed": "4.1.4",
+          "severity": "HIGH",
+          "title": "github.com/go-jose/go-jose/v3: github.com/go-jose/go-jose/v4: Go JOSE: Denial of Service via crafted JSON Web Encryption (JWE) object",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-34986"
+        },
+        {
+          "id": "CVE-2026-63209",
+          "target": "usr/bin/caddy",
+          "package": "github.com/klauspost/compress",
+          "installed": "v1.18.0",
+          "fixed": "1.18.7",
+          "severity": "HIGH",
+          "title": "github.com/klauspost/compress: klauspost/compress: Denial of Service via integer overflow in dictionary processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-63209"
+        },
+        {
+          "id": "CVE-2025-59530",
+          "target": "usr/bin/caddy",
+          "package": "github.com/quic-go/quic-go",
+          "installed": "v0.54.0",
+          "fixed": "0.49.1, 0.54.1",
+          "severity": "HIGH",
+          "title": "github.com/quic-go/quic-go: quic-go Crash Due to Premature HANDSHAKE_DONE Frame",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-59530"
+        },
+        {
+          "id": "CVE-2026-25793",
+          "target": "usr/bin/caddy",
+          "package": "github.com/slackhq/nebula",
+          "installed": "v1.9.5",
+          "fixed": "1.10.3",
+          "severity": "HIGH",
+          "title": "nebula: Nebula: Blocklist evasion via ECDSA Signature Malleability",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-25793"
+        },
+        {
+          "id": "CVE-2025-44005",
+          "target": "usr/bin/caddy",
+          "package": "github.com/smallstep/certificates",
+          "installed": "v0.28.4",
+          "fixed": "0.29.0",
+          "severity": "CRITICAL",
+          "title": "github.com/smallstep/certificates: github.com/smallstep/certificates: Authorization bypass allows unauthorized certificate creation",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-44005"
+        },
+        {
+          "id": "CVE-2026-30836",
+          "target": "usr/bin/caddy",
+          "package": "github.com/smallstep/certificates",
+          "installed": "v0.28.4",
+          "fixed": "0.30.0",
+          "severity": "CRITICAL",
+          "title": "github.com/smallstep/certificates: Step CA: Unauthenticated certificate issuance via SCEP Update Request",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-30836"
+        },
+        {
+          "id": "CVE-2026-29181",
+          "target": "usr/bin/caddy",
+          "package": "go.opentelemetry.io/otel",
+          "installed": "v1.37.0",
+          "fixed": "1.41.0",
+          "severity": "HIGH",
+          "title": "github.com/open-telemetry/opentelemetry-go: OpenTelemetry-Go: Denial of Service via crafted multi-value baggage headers",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-29181"
+        },
+        {
+          "id": "CVE-2026-24051",
+          "target": "usr/bin/caddy",
+          "package": "go.opentelemetry.io/otel/sdk",
+          "installed": "v1.37.0",
+          "fixed": "1.40.0",
+          "severity": "HIGH",
+          "title": "opentelemetry-go: OpenTelemetry-Go Affected by Arbitrary Code Execution via PATH Hijacking",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-24051"
+        },
+        {
+          "id": "CVE-2026-39883",
+          "target": "usr/bin/caddy",
+          "package": "go.opentelemetry.io/otel/sdk",
+          "installed": "v1.37.0",
+          "fixed": "1.43.0",
+          "severity": "HIGH",
+          "title": "github.com/open-telemetry/opentelemetry-go: OpenTelemetry-Go: Arbitrary code execution via PATH hijacking on BSD/Solaris",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39883"
+        },
+        {
+          "id": "CVE-2025-47913",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.43.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh/agent: golang.org/x/crypto/ssh/agent: SSH client panic due to unexpected SSH_AGENT_SUCCESS",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-47913"
+        },
+        {
+          "id": "CVE-2026-39828",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Unauthorized command execution via discarded SSH permissions",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39828"
+        },
+        {
+          "id": "CVE-2026-39829",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via crafted public key with excessive parameters",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39829"
+        },
+        {
+          "id": "CVE-2026-39830",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via resource leak from unsolicited SSH responses",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39830"
+        },
+        {
+          "id": "CVE-2026-39831",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Security key bypass due to missing user presence check",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39831"
+        },
+        {
+          "id": "CVE-2026-39832",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh/agent: golang.org/x/crypto/ssh/agent: Security bypass due to improper handling of key restrictions",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39832"
+        },
+        {
+          "id": "CVE-2026-39835",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang: golang.org/x/crypto/ssh: Denial of Service via crafted SSH certificate",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39835"
+        },
+        {
+          "id": "CVE-2026-42508",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh/knownhosts: golang: golang.org/x/crypto/ssh/knownhosts: Revocation bypass via unchecked SignatureKey",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-42508"
+        },
+        {
+          "id": "CVE-2026-46595",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Authorization bypass due to skipped source-address validation",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-46595"
+        },
+        {
+          "id": "CVE-2026-46597",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.52.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via crafted AES-GCM packet decoder inputs",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-46597"
+        },
+        {
+          "id": "CVE-2026-56854",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/crypto",
+          "installed": "v0.40.0",
+          "fixed": "0.55.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Authentication bypass due to unenforced source-address restrictions",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56854"
+        },
+        {
+          "id": "CVE-2026-25681",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/net",
+          "installed": "v0.42.0",
+          "fixed": "0.55.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/net/html: golang.org/x/net/html: Arbitrary code execution via Cross-Site Scripting",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-25681"
+        },
+        {
+          "id": "CVE-2026-27136",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/net",
+          "installed": "v0.42.0",
+          "fixed": "0.55.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/net/html: golang: golang.org/x/net/html: Cross-Site Scripting via HTML parsing bypass",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27136"
+        },
+        {
+          "id": "CVE-2026-33814",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/net",
+          "installed": "v0.42.0",
+          "fixed": "0.53.0",
+          "severity": "HIGH",
+          "title": "net/http/internal/http2: golang: golang.org/x/net: Go HTTP/2: Denial of Service via malformed SETTINGS_MAX_FRAME_SIZE frame",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33814"
+        },
+        {
+          "id": "CVE-2026-39821",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/net",
+          "installed": "v0.42.0",
+          "fixed": "0.55.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/net/idna: golang: net/http: golang.org/x/net/idna: Privilege escalation via incorrect Punycode label processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39821"
+        },
+        {
+          "id": "CVE-2026-46600",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/net",
+          "installed": "v0.42.0",
+          "fixed": "0.56.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/net/dns/dnsmessage: golang.org/x/net/dns/dnsmessage: Denial of Service via invalid DNS record parsing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-46600"
+        },
+        {
+          "id": "CVE-2026-78669",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/net",
+          "installed": "v0.42.0",
+          "fixed": "0.60.0",
+          "severity": "HIGH",
+          "title": "net/http: net/http/internal/http2: golang.org/x/net/http2: net/http: Denial of Service via excessive HTTP/2 SETTINGS frames",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-78669"
+        },
+        {
+          "id": "CVE-2026-56851",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/text",
+          "installed": "v0.27.0",
+          "fixed": "0.41.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/text: golang.org/x/text: Denial of Service via out-of-bounds slice error in Nickname profile",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56851"
+        },
+        {
+          "id": "CVE-2026-56852",
+          "target": "usr/bin/caddy",
+          "package": "golang.org/x/text",
+          "installed": "v0.27.0",
+          "fixed": "0.39.0",
+          "severity": "HIGH",
+          "title": "golang.org/x/text: golang.org/x/text: Denial of Service via invalid UTF-8 input",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56852"
+        },
+        {
+          "id": "CVE-2026-33186",
+          "target": "usr/bin/caddy",
+          "package": "google.golang.org/grpc",
+          "installed": "v1.73.0",
+          "fixed": "1.79.3",
+          "severity": "CRITICAL",
+          "title": "google.golang.org/grpc/grpc-go: google.golang.org/grpc/authz: gRPC-Go: Authorization bypass due to improper HTTP/2 path validation",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33186"
+        },
+        {
+          "id": "CVE-2026-84304",
+          "target": "usr/bin/caddy",
+          "package": "google.golang.org/grpc",
+          "installed": "v1.73.0",
+          "fixed": "1.83.1",
+          "severity": "HIGH",
+          "title": "google.golang.org/grpc: gRPC-Go: Denial of Service via HTTP/2 DATA Frame Fragmentation",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-84304"
+        },
+        {
+          "id": "CVE-2026-84445",
+          "target": "usr/bin/caddy",
+          "package": "google.golang.org/grpc",
+          "installed": "v1.73.0",
+          "fixed": "1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e",
+          "severity": "HIGH",
+          "title": "google.golang.org/grpc: gRPC-Go: Denial of Service via malformed RPC requests",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-84445"
+        },
+        {
+          "id": "GHSA-hrxh-6v49-42gf",
+          "target": "usr/bin/caddy",
+          "package": "google.golang.org/grpc",
+          "installed": "v1.73.0",
+          "fixed": "1.82.1",
+          "severity": "HIGH",
+          "title": "gRPC-Go: xDS RBAC and HTTP/2 Vulnerabilities",
+          "url": "https://github.com/advisories/GHSA-hrxh-6v49-42gf"
+        },
+        {
+          "id": "CVE-2025-68121",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.24.13, 1.25.7, 1.26.0-rc.3",
+          "severity": "CRITICAL",
+          "title": "crypto/tls: crypto/tls: Incorrect certificate validation during TLS session resumption",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-68121"
+        },
+        {
+          "id": "CVE-2025-61726",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.24.12, 1.25.6",
+          "severity": "HIGH",
+          "title": "golang: net/url: Memory exhaustion in query parameter parsing in net/url",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-61726"
+        },
+        {
+          "id": "CVE-2025-61729",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.24.11, 1.25.5",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: Denial of Service due to excessive resource consumption via crafted certificate",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-61729"
+        },
+        {
+          "id": "CVE-2026-111943",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.26.10, 1.27.3",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: crypto/x509: Man-in-the-middle attacks via untrusted intermediate certificates",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-111943"
+        },
+        {
+          "id": "CVE-2026-25679",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.8, 1.26.1",
+          "severity": "HIGH",
+          "title": "net/url: Incorrect parsing of IPv6 host literals in net/url",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-25679"
+        },
+        {
+          "id": "CVE-2026-27145",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.11, 1.26.4",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: golang crypto/x509: Denial of Service via excessive processing of DNS SAN entries",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27145"
+        },
+        {
+          "id": "CVE-2026-32280",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.9, 1.26.2",
+          "severity": "HIGH",
+          "title": "crypto/x509: crypto/tls: golang: Go: Denial of Service vulnerability in certificate chain building",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-32280"
+        },
+        {
+          "id": "CVE-2026-32281",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.9, 1.26.2",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: Go crypto/x509: Denial of Service via inefficient certificate chain validation",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-32281"
+        },
+        {
+          "id": "CVE-2026-32283",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.9, 1.26.2",
+          "severity": "HIGH",
+          "title": "crypto/tls: golang: Go crypto/tls: Denial of Service via multiple TLS 1.3 key update messages",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-32283"
+        },
+        {
+          "id": "CVE-2026-33811",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net: golang: Go net package: Denial of Service via long CNAME response in LookupCNAME",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33811"
+        },
+        {
+          "id": "CVE-2026-33814",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net/http/internal/http2: golang: golang.org/x/net: Go HTTP/2: Denial of Service via malformed SETTINGS_MAX_FRAME_SIZE frame",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33814"
+        },
+        {
+          "id": "CVE-2026-33818",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "encoding/asn1: golang: Go encoding/asn1: Denial of Service via excessive recursion in Unmarshal",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33818"
+        },
+        {
+          "id": "CVE-2026-39820",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net/mail: golang: Go net/mail: Denial of Service via crafted email inputs",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39820"
+        },
+        {
+          "id": "CVE-2026-39821",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "golang.org/x/net/idna: golang: net/http: golang.org/x/net/idna: Privilege escalation via incorrect Punycode label processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39821"
+        },
+        {
+          "id": "CVE-2026-39822",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+          "severity": "HIGH",
+          "title": "golang: Go os.Root: Symlink following vulnerability allows directory traversal",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39822"
+        },
+        {
+          "id": "CVE-2026-39836",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net: golang: Go net package: Denial of Service via NUL byte in Dial and LookupPort on Windows",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39836"
+        },
+        {
+          "id": "CVE-2026-42499",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net/mail: golang: net/mail: Denial of Service via pathological email address parsing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-42499"
+        },
+        {
+          "id": "CVE-2026-42504",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.11, 1.26.4",
+          "severity": "HIGH",
+          "title": "mime: golang: Golang MIME: Denial of Service via maliciously-crafted MIME header",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-42504"
+        },
+        {
+          "id": "CVE-2026-56853",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "net/http: golang: Go net/http: Unencrypted HTTP/2 connections vulnerable to Denial of Service",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56853"
+        },
+        {
+          "id": "CVE-2026-56858",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "html/template: golang: Go html/template: Cross-Site Scripting via pathological input",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56858"
+        },
+        {
+          "id": "CVE-2026-56859",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "encoding/xml: golang: Go: Denial of Service via XML decoding recursion depth issue",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56859"
+        },
+        {
+          "id": "CVE-2026-56860",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "net/url: golang: golang net/url: Denial of Service from quadratic complexity in path resolution",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56860"
+        },
+        {
+          "id": "CVE-2026-56862",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "crypto/tls: golang: Golang crypto/tls: Denial of Service via indefinite KeyUpdate messages",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56862"
+        },
+        {
+          "id": "CVE-2026-78667",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.26.9, 1.27.2",
+          "severity": "HIGH",
+          "title": "net/http: golang: golang: Denial of Service via crafted HTTP Range headers",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-78667"
+        },
+        {
+          "id": "CVE-2026-78669",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.26.9, 1.27.2",
+          "severity": "HIGH",
+          "title": "net/http: net/http/internal/http2: golang.org/x/net/http2: net/http: Denial of Service via excessive HTTP/2 SETTINGS frames",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-78669"
+        },
+        {
+          "id": "CVE-2026-97031",
+          "target": "usr/bin/caddy",
+          "package": "stdlib",
+          "installed": "v1.25.0",
+          "fixed": "1.26.9, 1.27.2",
+          "severity": "HIGH",
+          "title": "crypto/tls: golang: crypto/tls: Denial of Service via multiple ECH outer extension references",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-97031"
+        }
+      ]
+    },
+    {
+      "component": "postgres",
+      "imageId": "sha256:63d4ad6f3de5e288238b3044970a677dcb0e77004d8b6050732aa0cbbeedf5d7",
+      "os": {
+        "Family": "debian",
+        "Name": "12.15"
+      },
+      "high": 96,
+      "critical": 4,
+      "fixed": 28,
+      "unfixed": 72,
+      "fixableAdvisories": [
+        {
+          "id": "CVE-2026-84782",
+          "target": "postgres:18-bookworm (debian 12.15)",
+          "package": "libssl3",
+          "installed": "3.0.22-1~deb12u1",
+          "fixed": "3.0.22-1~deb12u2",
+          "severity": "HIGH",
+          "title": "openssl: compat-openssl: openssl: Information disclosure via DTLS handshake retransmission",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-84782"
+        },
+        {
+          "id": "CVE-2026-84782",
+          "target": "postgres:18-bookworm (debian 12.15)",
+          "package": "openssl",
+          "installed": "3.0.22-1~deb12u1",
+          "fixed": "3.0.22-1~deb12u2",
+          "severity": "HIGH",
+          "title": "openssl: compat-openssl: openssl: Information disclosure via DTLS handshake retransmission",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-84782"
+        },
+        {
+          "id": "CVE-2025-68121",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.24.13, 1.25.7, 1.26.0-rc.3",
+          "severity": "CRITICAL",
+          "title": "crypto/tls: crypto/tls: Incorrect certificate validation during TLS session resumption",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-68121"
+        },
+        {
+          "id": "CVE-2025-61726",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.24.12, 1.25.6",
+          "severity": "HIGH",
+          "title": "golang: net/url: Memory exhaustion in query parameter parsing in net/url",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-61726"
+        },
+        {
+          "id": "CVE-2025-61729",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.24.11, 1.25.5",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: Denial of Service due to excessive resource consumption via crafted certificate",
+          "url": "https://avd.aquasec.com/nvd/cve-2025-61729"
+        },
+        {
+          "id": "CVE-2026-111943",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.26.10, 1.27.3",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: crypto/x509: Man-in-the-middle attacks via untrusted intermediate certificates",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-111943"
+        },
+        {
+          "id": "CVE-2026-25679",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.8, 1.26.1",
+          "severity": "HIGH",
+          "title": "net/url: Incorrect parsing of IPv6 host literals in net/url",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-25679"
+        },
+        {
+          "id": "CVE-2026-27145",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.11, 1.26.4",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: golang crypto/x509: Denial of Service via excessive processing of DNS SAN entries",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-27145"
+        },
+        {
+          "id": "CVE-2026-32280",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.9, 1.26.2",
+          "severity": "HIGH",
+          "title": "crypto/x509: crypto/tls: golang: Go: Denial of Service vulnerability in certificate chain building",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-32280"
+        },
+        {
+          "id": "CVE-2026-32281",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.9, 1.26.2",
+          "severity": "HIGH",
+          "title": "crypto/x509: golang: Go crypto/x509: Denial of Service via inefficient certificate chain validation",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-32281"
+        },
+        {
+          "id": "CVE-2026-32283",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.9, 1.26.2",
+          "severity": "HIGH",
+          "title": "crypto/tls: golang: Go crypto/tls: Denial of Service via multiple TLS 1.3 key update messages",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-32283"
+        },
+        {
+          "id": "CVE-2026-33811",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net: golang: Go net package: Denial of Service via long CNAME response in LookupCNAME",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33811"
+        },
+        {
+          "id": "CVE-2026-33814",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net/http/internal/http2: golang: golang.org/x/net: Go HTTP/2: Denial of Service via malformed SETTINGS_MAX_FRAME_SIZE frame",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33814"
+        },
+        {
+          "id": "CVE-2026-33818",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "encoding/asn1: golang: Go encoding/asn1: Denial of Service via excessive recursion in Unmarshal",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-33818"
+        },
+        {
+          "id": "CVE-2026-39820",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net/mail: golang: Go net/mail: Denial of Service via crafted email inputs",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39820"
+        },
+        {
+          "id": "CVE-2026-39821",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "golang.org/x/net/idna: golang: net/http: golang.org/x/net/idna: Privilege escalation via incorrect Punycode label processing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39821"
+        },
+        {
+          "id": "CVE-2026-39822",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+          "severity": "HIGH",
+          "title": "golang: Go os.Root: Symlink following vulnerability allows directory traversal",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39822"
+        },
+        {
+          "id": "CVE-2026-39836",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net: golang: Go net package: Denial of Service via NUL byte in Dial and LookupPort on Windows",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-39836"
+        },
+        {
+          "id": "CVE-2026-42499",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "severity": "HIGH",
+          "title": "net/mail: golang: net/mail: Denial of Service via pathological email address parsing",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-42499"
+        },
+        {
+          "id": "CVE-2026-42504",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.11, 1.26.4",
+          "severity": "HIGH",
+          "title": "mime: golang: Golang MIME: Denial of Service via maliciously-crafted MIME header",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-42504"
+        },
+        {
+          "id": "CVE-2026-56853",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "net/http: golang: Go net/http: Unencrypted HTTP/2 connections vulnerable to Denial of Service",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56853"
+        },
+        {
+          "id": "CVE-2026-56858",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "html/template: golang: Go html/template: Cross-Site Scripting via pathological input",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56858"
+        },
+        {
+          "id": "CVE-2026-56859",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "encoding/xml: golang: Go: Denial of Service via XML decoding recursion depth issue",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56859"
+        },
+        {
+          "id": "CVE-2026-56860",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "net/url: golang: golang net/url: Denial of Service from quadratic complexity in path resolution",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56860"
+        },
+        {
+          "id": "CVE-2026-56862",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "severity": "HIGH",
+          "title": "crypto/tls: golang: Golang crypto/tls: Denial of Service via indefinite KeyUpdate messages",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-56862"
+        },
+        {
+          "id": "CVE-2026-78667",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.26.9, 1.27.2",
+          "severity": "HIGH",
+          "title": "net/http: golang: golang: Denial of Service via crafted HTTP Range headers",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-78667"
+        },
+        {
+          "id": "CVE-2026-78669",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.26.9, 1.27.2",
+          "severity": "HIGH",
+          "title": "net/http: net/http/internal/http2: golang.org/x/net/http2: net/http: Denial of Service via excessive HTTP/2 SETTINGS frames",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-78669"
+        },
+        {
+          "id": "CVE-2026-97031",
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "installed": "v1.24.6",
+          "fixed": "1.26.9, 1.27.2",
+          "severity": "HIGH",
+          "title": "crypto/tls: golang: crypto/tls: Denial of Service via multiple ECH outer extension references",
+          "url": "https://avd.aquasec.com/nvd/cve-2026-97031"
+        }
+      ]
+    }
+  ],
+  "uploadGuardProbe": [
+    {
+      "path": "/api/v1/media",
+      "status": 507,
+      "body": {
+        "statusCode": 507,
+        "error": "Insufficient Storage",
+        "message": "Quota de stockage ou espace libre insuffisant."
+      }
+    },
+    {
+      "path": "/api/v1/%6dedia",
+      "status": 200,
+      "body": {
+        "handlerExecuted": true,
+        "url": "/api/v1/%6dedia",
+        "route": "/api/v1/media"
+      }
+    },
+    {
+      "path": "/api/v1/imports/pdf",
+      "status": 507,
+      "body": {
+        "statusCode": 507,
+        "error": "Insufficient Storage",
+        "message": "Quota de stockage ou espace libre insuffisant."
+      }
+    },
+    {
+      "path": "/api/v1/imports/%70df",
+      "status": 200,
+      "body": {
+        "handlerExecuted": true,
+        "url": "/api/v1/imports/%70df",
+        "route": "/api/v1/imports/pdf"
+      }
+    },
+    {
+      "path": "/api/v1/imports/video",
+      "status": 507,
+      "body": {
+        "statusCode": 507,
+        "error": "Insufficient Storage",
+        "message": "Quota de stockage ou espace libre insuffisant."
+      }
+    },
+    {
+      "path": "/api/v1/imports/%76ideo",
+      "status": 200,
+      "body": {
+        "handlerExecuted": true,
+        "url": "/api/v1/imports/%76ideo",
+        "route": "/api/v1/imports/video"
+      }
+    }
+  ]
+}

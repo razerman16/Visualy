@@ -9,7 +9,7 @@ export function registerUploadGuard(api:FastifyInstance,directory:string,authori
  const maxBytes=Number(process.env.MEDIA_QUOTA_MB||10240)*1024*1024;
  const reservation=1536*1024*1024; // source, worker copy and capped output
  api.addHook('preHandler',async req=>{
-  if(req.method!=='POST'||!/^\/api\/v1\/(media|imports\/(pdf|video))$/.test(req.url.split('?')[0]))return;
+  if(req.method!=='POST'||!/^\/api\/v1\/(media|imports\/(pdf|video))$/.test(req.routeOptions.url || ''))return;
   const id=authorize(req);uploadRequests.take(id);
   const previous=checking;let release!:()=>void;checking=new Promise<void>(r=>release=r);await previous;
   try{

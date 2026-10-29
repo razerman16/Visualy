@@ -6,7 +6,10 @@ x-api-build: &api-build
   target: api
 services:
   postgres:
-    image: postgres:18-bookworm
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.postgres
+      target: postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-visualy}
       POSTGRES_USER: ${POSTGRES_USER:-visualy}

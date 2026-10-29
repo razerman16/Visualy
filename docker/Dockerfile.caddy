@@ -1,0 +1,14 @@
+# syntax=docker/dockerfile:1
+# Build the standard modules with a corrected Go runtime and pinned dependencies.
+FROM golang:1.27.3-alpine AS build
+ENV CGO_ENABLED=0 GOTOOLCHAIN=local
+WORKDIR /src
+COPY docker/caddy/go.mod docker/caddy/go.sum ./
+RUN go mod download
+COPY docker/caddy/main.go ./
+RUN go build -mod=readonly -trimpath -ldflags="-s -w" -o /usr/bin/caddy .
+
+FROM caddy:2.11.7-alpine AS caddy
+# Caddy serves/proxies content itself; curl and its vulnerable dependencies are unused.
+RUN apk del --no-network curl
+COPY --from=build /usr/bin/caddy /usr/bin/caddy

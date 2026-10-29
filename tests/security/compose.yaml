@@ -1,6 +1,9 @@
 # Disposable integration installation, separate project and volumes.
 services:
+  postgres:
+    image: visualy-postgres:latest
   caddy:
+    image: visualy-caddy:latest
     ports: !override ["127.0.0.1:${CADDY_HTTPS_PORT:-18443}:443", "127.0.0.1:${CADDY_HTTP_PORT:-18080}:80"]
     environment:
       CADDY_HTTPS_PORT: ${CADDY_HTTPS_PORT:-18443}

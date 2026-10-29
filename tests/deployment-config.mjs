@@ -15,10 +15,12 @@ function config(mode){return JSON.parse(execFileSync('docker',['compose','--env-
 function ports(service){return(service.ports||[]).map(p=>`${p.host_ip}:${p.published}:${p.target}`).sort();}
 try{
  const http=config();assert.equal(http.services.caddy,undefined);assert.equal(http.services.api.environment.COOKIE_SECURE,'false');
+ assert.equal(http.services.postgres.build.dockerfile,'docker/Dockerfile.postgres');
  assert.deepEqual(ports(http.services['admin-web']),['0.0.0.0:18082:80']);assert.deepEqual(ports(http.services['player-web']),['0.0.0.0:18083:80']);
  assert.equal(http.services['admin-web'].environment.TRUSTED_PROXY_IP,'127.0.0.1');
  for(const mode of ['https','ip','localhost']){
   const c=config(mode);assert.equal(c.services.api.environment.COOKIE_SECURE,'true');
+  assert.equal(c.services.caddy.build.dockerfile,'docker/Dockerfile.caddy');assert.equal(c.services.caddy.build.target,'caddy');
   for(const web of ['admin-web','player-web']){assert.deepEqual(ports(c.services[web]),[]);assert.equal(c.services[web].environment.TRUSTED_PROXY_IP,values.CADDY_IP);}
   const binding=mode==='localhost'?'127.0.0.1':'0.0.0.0';
   const expected=[`${binding}:18080:80`,`${binding}:18443:443`,...(mode==='https'?[]:[`${binding}:${mode==='ip'?'18444':'18445'}:8443`])].sort();

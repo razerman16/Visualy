@@ -1,5 +1,7 @@
 # Default HTTP deployment with fixture-only images and loopback ports.
 services:
+  postgres:
+    image: visualy-postgres:latest
   admin-web:
     image: visualy-admin-web:latest
     ports: !override ["127.0.0.1:18380:80"]

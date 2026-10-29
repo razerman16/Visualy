@@ -24,11 +24,31 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        target: [api, converter, admin, player]
+        target: [api, converter, admin, player, caddy, postgres]
     steps:
       - uses: actions/checkout@v6
-      - run: docker build -f docker/Dockerfile --target ${{ matrix.target }} -t visualy-scan .
-      - run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed visualy-scan
+      - name: Build or pull the configured image
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          case "$TARGET" in
+            postgres) docker build --pull -f docker/Dockerfile.postgres --target postgres -t visualy-scan . ;;
+            caddy) docker build --pull -f docker/Dockerfile.caddy --target caddy -t visualy-scan . ;;
+            *) docker build --pull -f docker/Dockerfile --target "$TARGET" -t visualy-scan . ;;
+          esac
+      - name: Scan all severities, including unfixed advisories
+        run: |
+          mkdir -p security-results
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/security-results:/results" aquasec/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c image --scanners vuln --format json --output /results/scan.json visualy-scan
+      - name: Enforce fixable HIGH/CRITICAL gate
+        run: python3 scripts/check-image-scan.py security-results/scan.json
+      - name: Retain full findings for remediation tracking
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: image-security-${{ matrix.target }}
+          path: security-results/scan.json
+          retention-days: 30
   integration:
     runs-on: ubuntu-24.04
     steps:

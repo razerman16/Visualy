@@ -4,6 +4,8 @@ Visualy starts in **direct HTTP mode**, without Caddy. This guide enables HTTPS 
 
 Keep your existing `.env`, secrets, and volumes. Each HTTPS mode automatically enables Secure session cookies, removes the direct HTTP ports from the web services, and publishes only Caddy's ports. PostgreSQL, the API, and the converter stay internal.
 
+HTTPS builds the standard Caddy modules from `docker/Dockerfile.caddy`, using a corrected Go runtime and locked Go dependencies. The first HTTPS build therefore needs access to the Go module registry as well as Docker Hub. No Go installation is required on the host. Caddy's certificate and configuration volumes remain unchanged. CI scans this image and the configured PostgreSQL image alongside the four application images, retaining full vulnerability reports for 30 days.
+
 ## 1. Choose an HTTPS mode
 
 Run one of the following commands from the repository on the Docker host. These commands select the Compose files in `.env`; they do not modify the host network or start containers.

@@ -1,5 +1,7 @@
 // UI messages only: user-created content is never translated.
 export const english: Record<string,string> = {
+  "La collection de scènes dépasse la limite. Les 1 000 premiers résumés sont affichés : ouvrez une scène pour réduire son contenu ou supprimez les scènes inutilisées.": "The scene collection exceeds the limit. The first 1,000 summaries are shown: open a scene to reduce its content or delete unused scenes.",
+  "Limite de contenu atteinte. Réduisez le contenu ou supprimez des éléments inutilisés.": "Content limit reached. Reduce the content or delete unused items.",
   "Vue d’ensemble": "Overview",
   "Médiathèque": "Media library",
   "Scènes": "Scenes",
