@@ -13,14 +13,13 @@ try{
   const media=await caches.open('visualy-media-upgrade-fixture');await media.put('/existing-media',new Response('cached media'));
  });
  await page.goto(player);
- await page.waitForFunction(async()=>!!(await navigator.serviceWorker.getRegistration())?.active,undefined,{timeout:30000});
  await page.evaluate(()=>navigator.serviceWorker.ready);
- await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
+ await page.waitForFunction(()=>navigator.serviceWorker.controller?.state==='activated');
  assert.equal(await page.title(),'Visualy · Écran');
  assert.equal(await page.evaluate(()=>localStorage.getItem('visualy-device-id')),'existing-device','device identity preserved');
  assert.equal(await page.evaluate(()=>caches.has('visualy-shell-v4')),false,'old shell retired');
  assert.equal(await page.evaluate(async()=>!!(await (await caches.open('visualy-media-upgrade-fixture')).match('/existing-media'))),true,'existing media cache preserved');
- const cached=await page.evaluate(async()=>{const cache=await caches.open('visualy-shell-v6');return (await cache.keys()).map(r=>new URL(r.url).pathname)});
+ const cached=await page.evaluate(async()=>{const name=(await caches.keys()).find(k=>k.startsWith('visualy-shell-'));if(!name)throw new Error('Player shell cache missing');const cache=await caches.open(name);return (await cache.keys()).map(r=>new URL(r.url).pathname)});
  assert.ok(cached.some(p=>p.endsWith('.woff2')),'self-hosted fonts cached');
  assert.ok(cached.includes('/brand/visualy-logo.png'),'logo cached');
  assert.ok(cached.includes('/brand/visualy-logo-dark.png'),'dark logo cached');

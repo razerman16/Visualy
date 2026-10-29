@@ -15,7 +15,8 @@
     "test:smoke": "node tests/smoke.mjs",
     "test:security": "tsx --test tests/security/*.test.ts",
     "test:deployment": "node tests/deployment-config.mjs && node --test tests/legacy/deployment-scripts.test.mjs",
-    "test:branding": "node tests/branding.mjs"
+    "test:branding": "node tests/branding.mjs",
+    "test:player-build": "node tests/player-build.mjs"
   },
   "engines": {
     "node": ">=22"

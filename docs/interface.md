@@ -33,3 +33,7 @@ node tests/ui/offline-shell.mjs
 - Recette Chromium : navigation, éditeur, connexion, jumelage visuel, vues mobiles, thèmes clair/sombre/système et français/anglais ; aucun débordement horizontal ni erreur JavaScript.
 - Mise à jour du lecteur : ancien cache d’interface remplacé, cache média et identifiant appareil préservés ; nouveau logo sombre, traductions et polices disponibles après rechargement hors connexion.
 - Configuration Docker Compose validée ; aucun volume ou secret existant modifié.
+
+## Revue de stabilité et de mise en page
+
+La [revue du 29 octobre 2026](stability-review-2026-10-29.md) décrit les corrections, la matrice de 200 mises en page, les scénarios d’erreur et les commandes de recette. Le cache de l’interface du lecteur est désormais versionné automatiquement lors du build.

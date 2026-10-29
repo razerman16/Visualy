@@ -218,3 +218,18 @@ label { display: flex; flex-direction: column; gap: 7px; font-size: 11px; font-w
 [data-theme=dark] .brand-art .brand-light{display:none}
 [data-theme=dark] .brand-art .brand-dark{display:block}
 [data-theme=dark] .brand-art:not(.compact){border-radius:10px}
+
+/* Keep intrinsic table widths inside their scroll area on narrow screens. */
+.settings-grid > *, .field-grid > *, .user-form > * { min-width: 0; }
+.settings-panel .user-form .button { white-space: normal; max-width: 100%; }
+.settings-panel dd, .group-list strong { overflow-wrap: anywhere; }
+.editor-header, .editor-overlay > .alert { flex-shrink: 0; }
+.canvas { touch-action: none; }
+@media(max-width:760px) {
+  .sidebar { visibility: hidden; }
+  .sidebar.open { visibility: visible; }
+  .editor-header { min-height: auto; }
+  .editor-header .title-input { flex: 1 1 calc(100% - 110px); min-width: 140px; }
+  .editor-header .preferences { order: 0; margin-right: auto; }
+  .editor-properties { min-width: 0; }
+}

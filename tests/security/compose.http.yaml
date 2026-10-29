@@ -1,0 +1,14 @@
+# Default HTTP deployment with fixture-only images and loopback ports.
+services:
+  admin-web:
+    image: visualy-admin-web:latest
+    ports: !override ["127.0.0.1:18380:80"]
+  player-web:
+    image: visualy-player-web:latest
+    ports: !override ["127.0.0.1:18381:80"]
+  api:
+    image: visualy-api:latest
+  migrate:
+    image: visualy-api:latest
+  converter:
+    image: visualy-converter:latest

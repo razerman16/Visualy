@@ -1,6 +1,6 @@
 /* Cache only the player shell. Media is stored by the page after SHA-256 verification. */
 importScripts('/legacy-sw.js');
-const SHELL_CACHE = 'visualy-shell-v6';
+const SHELL_CACHE = 'visualy-shell-__VISUALY_SHELL_REVISION__';
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);

@@ -190,7 +190,7 @@ export const english: Record<string,string> = {
   "Révoquer {0}": "Revoke {0}",
   "Révoquer cet écran": "Revoke this screen",
   "Connectons votre premier écran": "Let's connect your first screen",
-  "Ouvrez l’adresse du lecteur sur le port 8081 de votre serveur, puis renseignez ici le code affiché.": "Open the player on port 8081 of your server, then enter the displayed code here.",
+  "Ouvrez l’adresse du lecteur configurée pour votre installation, puis renseignez ici le code affiché.": "Open the player address configured for your installation, then enter the displayed code here.",
   "Journal des lecteurs": "Player log",
   "Événements techniques transmis par les écrans. Ils ne constituent pas une capture physique de la dalle.": "Technical events reported by players. They are not physical screen captures.",
   "Actualisation · 30 s": "Refresh · 30 s",
@@ -252,7 +252,7 @@ export const english: Record<string,string> = {
   "Une fin avant le début correspond à une plage passant minuit. 00:00 → 00:00 couvre la journée entière.": "An end time before the start crosses midnight. 00:00 → 00:00 covers the full day.",
   "Annuler": "Cancel",
   "Enregistrer la diffusion": "Save schedule",
-  "Ouvrez le lecteur sur le port 8081 de votre serveur pour obtenir son code.": "Open the player on port 8081 of your server to get its code.",
+  "Ouvrez l’adresse du lecteur configurée pour votre installation afin d’obtenir son code.": "Open the player address configured for your installation to get its code.",
   "Code affiché sur l’écran": "Code displayed on the screen",
   "Nom de l’écran": "Screen name",
   "Écran du hall principal": "Main lobby screen",
@@ -467,3 +467,11 @@ export const english: Record<string,string> = {
 };
 
 Object.assign(english, {"Clé d’installation": "Installation key", "Clé d’installation invalide": "Invalid installation key", "Sécurité des comptes": "Account security", "Mot de passe actuel": "Current password", "Nouveau mot de passe": "New password", "Changer le mot de passe et déconnecter les sessions": "Change password and sign out all sessions", "Accès et sessions": "Access and sessions", "Désactivé": "Disabled", "Actif": "Active", "Révoquer les sessions": "Revoke sessions", "Réactiver": "Enable", "Désactiver": "Disable", "Réinitialiser un mot de passe": "Reset a password", "Réinitialiser et révoquer les sessions": "Reset password and revoke sessions", "Journal de sécurité": "Security log", "Opération effectuée.": "Operation completed.", "Mot de passe actuel incorrect": "Incorrect current password", "Trop de requêtes. Réessayez plus tard.": "Too many requests. Try again later.", "File d’import pleine. Réessayez plus tard.": "Import queue is full. Try again later.", "Quota de stockage ou espace libre insuffisant.": "Storage quota or free space is insufficient.", "Couleur invalide": "Invalid color", "Trop d’éléments": "Too many items"});
+
+Object.assign(english, {"Éditeur de scène":"Scene editor","Utilisez la valeur SETUP_TOKEN du fichier .env de votre serveur.":"Use the SETUP_TOKEN value from the .env file on your server."});
+
+Object.assign(english, {
+ "Réponse du serveur invalide. Réessayez.":"Invalid server response. Try again.",
+ "Le serveur ne répond pas. Vérifiez la connexion puis réessayez.":"The server is not responding. Check your connection and try again.",
+ "Connexion au serveur impossible. Vérifiez votre réseau.":"Cannot connect to the server. Check your network."
+});
