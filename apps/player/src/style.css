@@ -3,7 +3,7 @@
 :root{font-family:'Manrope Variable',Manrope,system-ui,sans-serif}
 .pairing{background:radial-gradient(ellipse at 50% 50%,#edf3ff,transparent 60%),#f7f9fd;color:#192440;padding:28px 48px 25px}
 .brand-logo{width:225px;height:75px;object-fit:contain;display:block}
-.pairing-top .brand{margin-left:-16px}
+
 .pairing .pill{background:white;border:1px solid #e1e9f5;color:#7a8ca9;font-size:10px;box-shadow:0 2px 8px #223d7005}
 .pair-card{padding:35px 0;min-height:530px}
 .screen-icon{background:white;border:1px solid #e0e8f8;color:#507af0;box-shadow:0 10px 35px #315cba0b;border-radius:24px;margin-bottom:30px}
@@ -14,13 +14,13 @@
 .pair-code{background:white;border:1px solid #dce6fb;box-shadow:0 8px 28px #24458009;letter-spacing:11px;border-radius:14px;color:#345fcf;font-size:48px;font-weight:650;padding:19px 24px 19px 35px;margin:30px 0 20px}
 .waiting{color:#8a9ab3;font-size:10px}.pulse-dot{background:#30bda5;box-shadow:0 0 0 4px #30bda510}
 .pair-card .notice{background:#fff7e7;border:1px solid #fae7bf;color:#997642}.pair-card .error{background:#fff0f3;border-color:#fadce3;color:#be5b72}.pair-card .context-note{color:#9aa9c0;font-size:10px;margin-top:27px}.pair-footer{color:#a0aec4;font-size:9px}
-.brand-mark{background:transparent!important;position:relative;overflow:hidden;width:65px!important;height:65px!important;border-radius:0!important;flex:none}
-.brand-mark img{position:absolute;width:290px;max-width:none;left:-20px;top:-13px;height:auto}
+.brand-mark{background:transparent!important;width:65px!important;height:65px!important;border-radius:0!important;flex:none}
+
 .fallback{background:radial-gradient(ellipse at 50% 40%,#1b3155,#101c33 70%);font-family:'Manrope Variable',system-ui,sans-serif}.fallback h1{font-weight:800;letter-spacing:-1.2px}.fallback p{color:#899cba;font-size:13px}.fallback-signature{color:#617899;letter-spacing:1px;font-size:9px}
 .scene{font-family:Arial,sans-serif;line-height:1.2}
 .player-toolbar{border-radius:12px;background:#152743eb;border-color:#58749a44}.player-toolbar button{background:#3165f5;border-color:#3165f5;color:white;border-radius:8px;font-size:10px}.diagnostic{border-radius:7px}
-@media(max-width:600px){.pairing{padding:16px 23px 22px}.brand-logo{width:170px;height:57px}.pairing-top .brand{margin-left:-12px}.pairing .pill{font-size:9px;padding:6px 9px}.pair-card{min-height:480px}.pair-card h1{font-size:31px;letter-spacing:-1.2px}.pair-code{font-size:36px;min-width:260px}.pair-footer{font-size:8px;gap:15px}.pair-card>p{font-size:11px}}
-.brand-mark img{width:100%;height:100%;left:0;top:0;object-fit:contain}
+@media(max-width:600px){.pairing{padding:16px 23px 22px}.brand-logo{width:170px;height:57px}.pairing .pill{font-size:9px;padding:6px 9px}.pair-card{min-height:480px}.pair-card h1{font-size:31px;letter-spacing:-1.2px}.pair-code{font-size:36px;min-width:260px}.pair-footer{font-size:8px;gap:15px}.pair-card>p{font-size:11px}}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:contain}
 .preferences{display:flex;align-items:center;gap:6px}.pairing-actions{display:flex;align-items:center;gap:15px}.preference-control{display:flex;align-items:center;gap:4px;padding:0 7px;background:white;border:1px solid #dce5f4;color:#6d81a2;border-radius:9px;height:34px;font-size:15px}.preference-control select{border:0;background:transparent;color:inherit;font:inherit;font-size:10px;padding:5px;max-width:90px;cursor:pointer}.preference-control:focus-within{outline:2px solid #719df4;outline-offset:2px}
 [data-theme=dark] .pairing{background:radial-gradient(ellipse at 50% 50%,#1d3152,transparent 65%),#101b2e;color:#e4ebfa}[data-theme=dark] .pairing .pill,[data-theme=dark] .preference-control{background:#21324b;border-color:#354b6a;color:#adc2e4}[data-theme=dark] .preference-control option{background:#21324b}[data-theme=dark] .screen-icon{background:#213658;border-color:#3a5277;color:#8eafff}[data-theme=dark] .pair-card h1{color:#e2ebff}[data-theme=dark] .pair-card>p,[data-theme=dark] .waiting{color:#9eb1cf}[data-theme=dark] .pair-card strong{color:#bacff5}[data-theme=dark] .pair-code{background:#1b2e4c;border-color:#3b537a;color:#b7cbff}[data-theme=dark] .pair-card .notice{background:#3d3325;border-color:#685435;color:#e2c793}[data-theme=dark] .pair-card .error{background:#3d2434;border-color:#654053;color:#eeb1c6}
 @media(max-width:600px){.pairing-top{flex-wrap:wrap;gap:8px}.pairing-actions{width:100%;justify-content:space-between;gap:8px}.pairing-actions .pill{margin-left:auto}.pair-card{padding-top:35px}.preferences{gap:5px}}
@@ -29,4 +29,3 @@
 .brand-logo .brand-dark{display:none}
 [data-theme=dark] .brand-logo .brand-light{display:none}
 [data-theme=dark] .brand-logo .brand-dark{display:block}
-[data-theme=dark] .brand-logo{border-radius:10px;overflow:hidden}

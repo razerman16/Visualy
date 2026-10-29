@@ -37,3 +37,5 @@ node tests/ui/offline-shell.mjs
 ## Revue de stabilité et de mise en page
 
 La [revue du 29 octobre 2026](stability-review-2026-10-29.md) décrit les corrections, la matrice de 200 mises en page, les scénarios d’erreur et les commandes de recette. Le cache de l’interface du lecteur est désormais versionné automatiquement lors du build.
+
+Les logos clair, sombre et compact sont des PNG RGBA à fond transparent. Les deux variantes du mot-symbole partagent les mêmes contours, avec des marges transparentes ; leur affichage utilise `object-fit: contain`, sans décalage ni découpe. Le panneau sombre de connexion utilise la variante blanche même lorsque le reste de l’interface est clair. Les ressources sont identiques dans l’administration et le lecteur, et leur modification renouvelle automatiquement le cache de l’interface du lecteur au prochain build.
