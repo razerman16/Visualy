@@ -1,3 +1,4 @@
+import {registerImportWorker} from './import-queue.js';
 import {convertRemote} from './conversion-client.js';
 import {mkdir,rename} from 'node:fs/promises';
 import type {FastifyInstance,FastifyRequest} from 'fastify';
@@ -36,7 +37,6 @@ export async function registerVideoImports(api:FastifyInstance,directory:string,
    return reply.code(202).send({id,name,status:'pending'});
   }finally{if(!saved)await rm(path,{force:true});}
  });
- let running:Promise<void>|undefined,stopped=false;
  async function work(){
   const client=await pool.connect();let output='',committed=false;
   try{
@@ -59,6 +59,5 @@ export async function registerVideoImports(api:FastifyInstance,directory:string,
   }catch(error){await client.query('ROLLBACK').catch(()=>{});if(output&&!committed)await rm(output,{force:true});api.log.error({err:error},'Video import failed');}
   finally{client.release();}
  }
- const timer=setInterval(()=>{if(!stopped&&!running)running=work().catch(error=>api.log.error({err:error},'Video queue unavailable')).finally(()=>{running=undefined;});},2000);timer.unref();
- api.addHook('onClose',async()=>{stopped=true;clearInterval(timer);await running;});
+ registerImportWorker(api,work);
 }

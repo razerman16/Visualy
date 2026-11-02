@@ -1,3 +1,4 @@
+import {registerImportWorker} from './import-queue.js';
 import {convertRemote} from './conversion-client.js';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { pool } from './db.js';
@@ -26,7 +27,6 @@ export async function registerPdfImports(api:FastifyInstance, directory:string, 
     try{await pool.query('INSERT INTO pdf_imports(id,name,path) VALUES($1,$2,$3)',[id,name,path]);}catch(e){await rm(path,{force:true});throw e;}
     return reply.code(202).send({id,name,status:'pending'});
   });
-  let stopped=false,running:Promise<void>|undefined;
   async function work(){
     const client=await pool.connect();let temp='';const outputs:string[]=[];
     try{
@@ -53,6 +53,5 @@ export async function registerPdfImports(api:FastifyInstance, directory:string, 
     }catch(error){await client.query('ROLLBACK').catch(()=>{});for(const path of outputs)await rm(path,{force:true});api.log.error({err:error},'PDF import failed');}
     finally{if(temp)await rm(temp,{recursive:true,force:true});client.release();}
   }
-  const timer=setInterval(()=>{if(!stopped&&!running)running=work().catch(error=>api.log.error({err:error},'PDF queue unavailable')).finally(()=>{running=undefined;});},2000);timer.unref();
-  api.addHook('onClose',async()=>{stopped=true;clearInterval(timer);await running;});
+  registerImportWorker(api,work);
 }

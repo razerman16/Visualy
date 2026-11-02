@@ -60,6 +60,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg poppler-utils
       - run: npm ci && npm run build
       - run: npx playwright install --with-deps chromium
-      - run: |
+      - name: Run HTTP and HTTPS integration checks
+        run: |
           export VISUALY_CHROMIUM=$(node --input-type=module -e "import {chromium} from '@playwright/test'; console.log(chromium.executablePath())")
           sh tests/security/run-integration.sh
